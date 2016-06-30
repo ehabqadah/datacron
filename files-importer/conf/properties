@@ -1,0 +1,28 @@
+#------------------------------------------------------------------------------
+#=SPARK COMPUTING	
+#------------------------------------------------------------------------------
+spark.master=spark://master:7077
+spark.executor.memory=2g
+spark.executor.cores=1
+spark.cores.max=10
+#spark.driver.port=6767
+#spark.executor.port=9169
+#spark.broadcast.port=7692
+#spark.fileserver.port=5681
+#spark.blockManager.port=8716
+#spark.replClassServer.port=9824
+spark.driver.port=7001
+spark.fileserver.port=7002
+spark.broadcast.port=7003
+spark.replClassServer.port=7004
+spark.blockManager.port=7005
+spark.executor.port=7006
+spark.cassandra.connection.host=cassandra1
+
+#------------------------------------------------------------------------------
+#=CASSANDRA STORAGE
+#------------------------------------------------------------------------------
+cassandra.seed=cassandra1
+cassandra.keyspace=example
+cassandra.replication.factor=1
+cassandra.replication.strategy=SimpleStrategy
