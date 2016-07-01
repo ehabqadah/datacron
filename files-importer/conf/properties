@@ -3,8 +3,8 @@
 #------------------------------------------------------------------------------
 spark.master=spark://master:7077
 spark.executor.memory=2g
-spark.executor.cores=1
-spark.cores.max=10
+spark.executor.cores=4
+spark.cores.max=6
 #spark.driver.port=6767
 #spark.executor.port=9169
 #spark.broadcast.port=7692

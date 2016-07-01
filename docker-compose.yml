@@ -30,7 +30,7 @@ services:
         - 4040:4040
         - 6066:6066
         - 7077:7077
-        - 8080:8080
+        - 8082:8082
       volumes:
         - ./spark/conf/master:/conf
         - ./spark/data:/tmp/data
