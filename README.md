@@ -31,8 +31,10 @@ Setting up and running the files importer app on docker:
    - cqlsh cassandra1
    - use keyspace example
    - select * from items ;
+
    
-id                                   | content                            | ingestdate
-53c84982-8411-42a2-a067-fc584ba7b2fa | 0x6974657374207465737420746573740a | 2016-07-01 15:37:38+0000
+id: 53c84982-8411-42a2-a067-fc584ba7b2fa 
+content: 0x6974657374207465737420746573740a  
+ingestdate: 2016-07-01 15:37:38+0000
 
 
