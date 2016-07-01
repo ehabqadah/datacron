@@ -1,6 +1,6 @@
 #### datacron
 
-Setting up and running the Spark files importer app on docker:
+Setting up and running the files importer app on docker:
 - Install git, docker, docker compose, maven, java 8
 - Clone datacron project
 - Clone spark, cassandra, hadoop images as described in compose file
