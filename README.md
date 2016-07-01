@@ -3,7 +3,7 @@
 Setting up and running the files importer app on docker:
 - Install git, docker, docker compose, maven, java 8
 - Clone datacron project
-- Clone spark, cassandra, hadoop images as described in compose file
+- Clone spark, cassandra, hadoop images as described in docker-compose.yml
 - cd datacron and execute:
   - docker-compose up cassandra1
   - docker-compose up hadoop-namenode
