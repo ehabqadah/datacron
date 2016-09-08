@@ -1,0 +1,6 @@
+spark.app.input.data=medium_gennady_taxy_ny
+spark.app.input.id=
+spark.app.input.date=PICKUP_DT
+spark.app.input.x=PICKUP_LAT
+spark.app.input.y=PICKUP_LON
+spark.app.input.other=FILE_NO,LINE_NO,MEDALLION,HACK_LICENSE,VENDOR_ID,RATE_CODE,STORE_FWD_FLAG,DROPOFF_DT,PASSENGER_COUNT,RIP_TIME_SECONDS,TRIP_DISTANCE,DROPOFF_LON,DROPOFF_LAT

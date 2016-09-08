@@ -1,0 +1,6 @@
+spark.app.input.data=crida_radar_track
+spark.app.input.id=
+spark.app.input.date=
+spark.app.input.x=
+spark.app.input.y=
+spark.app.input.other=

@@ -1,0 +1,6 @@
+spark.app.input.data=driving_ad071013
+spark.app.input.id=N
+spark.app.input.date=DT
+spark.app.input.x=LON
+spark.app.input.y=LAT
+spark.app.input.other=HEIGHT,STATE,NSAT

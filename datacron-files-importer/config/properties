@@ -1,0 +1,38 @@
+#------------------------------------------------------------------------------
+# SPARK 
+#------------------------------------------------------------------------------
+spark.master=local[2]
+#spark.master=spark://master:7077
+spark.executor.memory=4g
+spark.executor.cores=1
+spark.cores.max=4
+spark.driver.port=6767
+spark.executor.port=9169
+spark.broadcast.port=7692
+spark.fileserver.port=5681
+spark.blockManager.port=8716
+spark.replClassServer.port=9824
+spark.serializer=org.apache.spark.serializer.KryoSerializer
+
+#------------------------------------------------------------------------------
+# CASSANDRA 
+#------------------------------------------------------------------------------
+cassandra.seed=129.26.75.2
+cassandra.keyspace=datacron492016
+#cassandra.seed=cassandra1
+#cassandra.keyspace=datacron
+cassandra.replication.factor=1
+cassandra.replication.strategy=SimpleStrategy
+
+#------------------------------------------------------------------------------
+# SPARK CASSANDRA CONNECTOR
+#------------------------------------------------------------------------------
+spark.cassandra.connection.host=129.26.75.2
+#spark.cassandra.connection.host=cassandra1
+spark.cassandra.output.consistency.level=ALL
+
+#------------------------------------------------------------------------------
+# LOGGING
+#------------------------------------------------------------------------------
+#spark.app.trajectories.statistics=/datacron/logs
+spark.app.trajectories.statistics=/home/mint/Documents/datacron/v-analytics/datacron-importer/statistics

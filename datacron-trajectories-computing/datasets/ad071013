@@ -1,0 +1,9 @@
+spark.app.trajectories.inputdata=driving_ad071013
+spark.app.trajectories.output.nd=driving_ad071013_nd
+spark.app.trajectories.output.nds=driving_ad071013_nds
+spark.app.trajectories.absoluteparams=HEIGHT,NSAT
+spark.app.trajectories.relativeparams=STATE
+spark.app.trajectories.physicaltime=true
+spark.app.trajectories.geocoordinates=true
+spark.app.trajectories.speedoutlierthresholdfactor=5.0
+spark.app.trajectories.statistics=/home/mint/Documents/stats

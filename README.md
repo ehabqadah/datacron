@@ -16,6 +16,8 @@ Setting up and running the files importer app on docker:
   - docker-compose up worker
 - Upload sample files to hdfs:
   - docker-compose exec hadoop-namenode /bin/bash
+  - hdfs dfs -mkdir /samples
+  - hdfs dfs -ls /
   - hdfs dfs -put /data/dfs/name/samples /samples
   - hdfs dfs -ls /samples
 - Run Spark app:
@@ -29,5 +31,5 @@ Setting up and running the files importer app on docker:
 - Check result:
    - docker-compose exec cassandra1 /bin/bash
    - cqlsh cassandra1
-   - use keyspace example
+   - use example ;
    - select * from items ;

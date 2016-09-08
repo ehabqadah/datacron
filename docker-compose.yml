@@ -1,106 +1,140 @@
-version: '2'
+networks:
+  datacron:
+    driver: overlay
 services:
-    cassandra1:
-        container_name: cassandra1-container
-        image: cassandra:3.3
-        ports:
-            - 7000:7000
-            - 7001:7001
-            - 7199:7199
-            - 9042:9042
-            - 9160:9160
-    master:
-      image: gettyimages/spark:1.5.2-hadoop-2.6
-      command: /usr/spark/bin/spark-class org.apache.spark.deploy.master.Master -h master
-      hostname: master
-      environment:
-        SPARK_CONF_DIR: /conf
-        MASTER: spark://master:7077
-      links:
-        - cassandra1
-        - hadoop-namenode:hdfs-namenode
-        - hadoop-datanode1:hdfs-datanode1
-      expose:
-        - 7001-7006
-        - 7077
-        - 6066
-      ports:
-        - 4040:4040
-        - 6066:6066
-        - 7077:7077
-        - 8082:8082
-      volumes:
-        - ./spark/conf/master:/conf
-        - ./spark/data:/tmp/data
-        - ./hadoop/conf:/etc/hadoop
+  app:
+    command: /bin/bash
+    environment:
+     - "SPARK_CONF_DIR: /conf"
+     - "constraint:node==cmp11"
+    expose:
+      - 7001-7006
+    hostname: app
+    image: "gettyimages/spark:1.5.2-hadoop-2.6"
+    # links:
+      # - master
+      # - worker
+      # - cassandra1
+      # - "hadoop-2:hdfs-namenode"
+      # - "hadoop-1:hdfs-datanode1"
+    volumes:
+      - "./spark/conf/app:/conf"
+      - "./spark/data:/tmp/data"
+      - "./datacron-files-importer:/datacron-files-importer"
+      - "./datacron-trajectories:/datacron-trajectories"
+      - "./hadoop/conf:/etc/hadoop"
+      - "./logs:/datacron/logs"
+    networks:
+      - datacron
+  cassandra1:
+    environment:
+      - "affinity:container!=~datacron_cassandra*"
+    image: "cassandra:3.3"
+    ports:
+      - "7000:7000"
+      - "7001:7001"
+      - "7199:7199"
+      - "9042:9042"
+      - "9160:9160"
+    volumes:
+      - "./cassandra/conf/cassandra1:/etc/cassandra"
+      #- "./cassandra/data:/var/lib/cassandra"
+    networks:
+      - datacron
+  hdfs-datanode1:
+    command: "hdfs datanode"
+    environment:
+     - "affinity:container!=~datacron_hdfs-datanode1*"
+    hostname: hdfs-datanode1
+    image: "gelog/hadoop:2.6.0"
+    # links:
+      # - "hadoop-2:hdfs-namenode"
+    ports:
+      - "50075:50075"
+    volumes:
+      - "./hadoop/data:/data/dfs/data"
+    networks:
+      - datacron
+  hdfs-namenode:
+    command: "hdfs namenode"
+    container_name: hdfs-namenode
+    environment:
+      - "constraint:node==cmp11"
+    hostname: hdfs-namenode
+    image: "gelog/hadoop:2.6.0"
+    ports:
+      - "50070:50070"
+    volumes:
+      - "./hadoop/name:/data/dfs/name"
+    networks:
+      - datacron
+  hdfs-secondarynamenode:
+    command: "hdfs secondarynamenode"
+    container_name: hdfs-secondarynamenode
+    environment:
+      - "constraint:node==cmp11"
+    hostname: hdfs-secondarynamenode
+    image: "gelog/hadoop:2.6.0"
+    links:
+      - "hdfs-namenode:hdfs-namenode"
+    ports:
+      - "50090:50090"
+    networks:
+      - datacron
+  master:
+    command: "/usr/spark/bin/spark-class org.apache.spark.deploy.master.Master -h master"
+    environment:
+      - "SPARK_CONF_DIR: /conf"
+      - "MASTER: \"spark://master:7077\""
+      - "constraint:node==cmp11"
+    expose:
+      - 7001-7006
+      - 7077
+      - 6066
+    hostname: master
+    image: "gettyimages/spark:1.5.2-hadoop-2.6"
+    # links:
+      # - cassandra1
+      # - "hadoop-2:hdfs-namenode"
+      # - "hadoop-1:hdfs-datanode1"
+    ports:
+      - "4040:4040"
+      - "6066:6066"
+      - "7077:7077"
+      - "8082:8082"
+    volumes:
+      - "./spark/conf/master:/conf"
+      - "./spark/data:/tmp/data"
+      - "./hadoop/conf:/etc/hadoop"
+    networks:
+      - datacron
+  worker:
+    command: "/usr/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077"
+    environment:
+      - "SPARK_CONF_DIR: /conf"
+      - "SPARK_WORKER_CORES: 2"
+      - "SPARK_WORKER_MEMORY: 1g"
+      - "SPARK_WORKER_PORT: 8881"
+      - "SPARK_WORKER_WEBUI_PORT: 8081"
+      - "affinity:container!=~datacron_worker*"
+    expose:
+      - 7001-7006
+      - 8881
+    hostname: worker
+    image: "gettyimages/spark:1.5.2-hadoop-2.6"
+    # links:
+      # - master
+      # - cassandra1
+      # - "hadoop-2:hdfs-namenode"
+      # - "hadoop-1:hdfs-datanode1"
+    ports:
+      - "8081:8081"
+    volumes:
+      - "./spark/conf/worker:/conf"
+      - "./spark/data:/tmp/data"
+      - "./hadoop/conf:/etc/hadoop"
+    networks:
+      - datacron
+version: "2"
 
-    worker:
-      image: gettyimages/spark:1.5.2-hadoop-2.6
-      command: /usr/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077
-      hostname: worker
-      environment:
-        SPARK_CONF_DIR: /conf
-        SPARK_WORKER_PORT: 8881
-        SPARK_WORKER_WEBUI_PORT: 8081
-      links:
-        - master
-        - cassandra1
-        - hadoop-namenode:hdfs-namenode
-        - hadoop-datanode1:hdfs-datanode1
-      expose:
-        - 7001-7006
-        - 8881
-      ports:
-        - 8081:8081
-      volumes:
-        - ./spark/conf/worker:/conf
-        - ./spark/data:/tmp/data
-        - ./hadoop/conf:/etc/hadoop
-
-    hadoop-namenode:
-      image: gelog/hadoop:2.6.0
-      command: hdfs namenode
-      hostname: hdfs-namenode
-      ports:
-       - 50070:50070
-      volumes:
-       - ./hadoop/name:/data/dfs/name
-
-    hadoop-datanode1:
-      image: gelog/hadoop:2.6.0
-      command: hdfs datanode 
-      hostname: hdfs-datanode1
-      links:
-       - hadoop-namenode:hdfs-namenode
-      ports:
-       - 50075:50075
-
-    hadoop-secondarynamenode:
-      image: gelog/hadoop:2.6.0
-      command: hdfs secondarynamenode
-      hostname: hdfs-secondarynamenode
-      links:
-       - hadoop-namenode:hdfs-namenode
-      ports:
-       - 50090:50090
-
-    app:
-      image: gettyimages/spark:1.5.2-hadoop-2.6
-      command: /bin/bash
-      hostname: app
-      environment:
-        SPARK_CONF_DIR: /conf
-      links:
-        - master
-        - worker
-        - cassandra1
-        - hadoop-namenode:hdfs-namenode
-        - hadoop-datanode1:hdfs-datanode1
-      expose:
-        - 7001-7006
-      volumes:
-        - ./spark/conf/app:/conf
-        - ./spark/data:/tmp/data
-        - ./files-importer:/files-importer
-        - ./hadoop/conf:/etc/hadoop
 

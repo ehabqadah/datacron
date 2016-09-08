@@ -1,0 +1,6 @@
+spark.app.input.data=rfid_pathway_data_v3
+spark.app.input.id=id
+spark.app.input.date=d
+spark.app.input.x=x
+spark.app.input.y=y
+spark.app.input.other=

@@ -1,0 +1,6 @@
+spark.app.input.data=large_gennady_vavel_20160531_20160704_tramwaje
+spark.app.input.id=ID
+spark.app.input.date=Time
+spark.app.input.x=Lat
+spark.app.input.y=Lon
+spark.app.input.other=Status,LowFloor,FirstLine,Lines,Brigade

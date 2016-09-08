@@ -1,0 +1,14 @@
+spark.app.trajectories.inputdata=birds
+spark.app.trajectories.output.nd=birds_nd
+spark.app.trajectories.output.nds=birds_nds
+spark.app.trajectories.id=id
+spark.app.trajectories.date=d
+spark.app.trajectories.x=x
+spark.app.trajectories.y=y
+spark.app.trajectories.absoluteparams=
+spark.app.trajectories.relativeparams=
+spark.app.trajectories.physicaltime=true
+spark.app.trajectories.geocoordinates=true
+spark.app.trajectories.statisticsoutput=
+spark.app.trajectories.speedoutlierthresholdfactor=1.1
+spark.app.trajectories.statistics=statistics/birds
