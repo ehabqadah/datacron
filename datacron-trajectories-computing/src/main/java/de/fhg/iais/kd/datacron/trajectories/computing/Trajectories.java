@@ -25,7 +25,7 @@ import de.fhg.iais.kd.datacron.trajectories.computing.data.provider.Trajectories
 import de.fhg.iais.kd.datacron.trajectories.computing.data.provider.ParametrizedInputProvider;
 import de.fhg.iais.kd.datacron.trajectories.computing.table.beans.TBTrajectoriesOutput;
 import de.fhg.iais.kd.datacron.trajectories.computing.table.beans.TBTrajectoriesParametrizedInput;
-import de.fhg.iais.kd.datacron.trajectories.computing.utils.AnalyticsUtils;
+import de.fhg.iais.kd.datacron.trajectories.computing.utils.Utils;
 import scala.Tuple2;
 
 /**
@@ -248,7 +248,7 @@ public class Trajectories implements Serializable {
 				double distance = 0.0;
 
 				if (areGeoCoordinates) {
-					distance = AnalyticsUtils.greatCircle(y1, x1, y2, x2);
+					distance = Utils.greatCircle(y1, x1, y2, x2);
 				} else {
 					distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
 				}

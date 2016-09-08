@@ -1,8 +1,8 @@
 package de.fhg.iais.kd.datacron.trajectories.computing.utils;
 
-public final class AnalyticsUtils {
+public final class Utils {
 	
-	private AnalyticsUtils(){}
+	private Utils(){}
 	
 	public static double greatCircle(double y1, double x1, double y2, double x2) {
 		final double la1 = Math.PI / 180 * y1;

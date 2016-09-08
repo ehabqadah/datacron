@@ -8,12 +8,14 @@ import com.google.inject.name.Named;
  *
  */
 public class TBMTrajectoriesOutputNDS extends TBMTrajectoriesOutputND {
-	private static final long serialVersionUID = -4522163764638199250L;
-
+	
+	private static final long serialVersionUID = 4084602923118361080L;
+	
 	@Inject
 	@Named("spark.app.trajectories.output.nds")
 	private String tableName;
-	private static final String DESCRIPTION = "trajectories table - stationary points";
+	
+	private static final String DESCRIPTION = "Trajectories output. (Stationary points.)";
 
 	public String getTableName() {
 		return tableName;

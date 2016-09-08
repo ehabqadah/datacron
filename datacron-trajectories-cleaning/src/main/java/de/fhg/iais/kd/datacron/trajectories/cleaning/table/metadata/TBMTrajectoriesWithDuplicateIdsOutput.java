@@ -5,15 +5,16 @@ import com.google.inject.name.Named;
 
 /**
  * @author kthellmann
- *
  */
-public class TBMTrajectoriesOutputNDS extends TBMTrajectoriesOutputND {
-	private static final long serialVersionUID = -4522163764638199250L;
+public class TBMTrajectoriesWithDuplicateIdsOutput extends TBMTrajectories {
+	
+	private static final long serialVersionUID = -4886696149322240100L;
 
 	@Inject
-	@Named("spark.app.trajectories.output.nds")
+	@Named("spark.app.trajectories.with.duplicate.ids.output")
 	private String tableName;
-	private static final String DESCRIPTION = "trajectories table - stationary points";
+	
+	private static final String DESCRIPTION = "Trajectories with duplicate ids output.";
 
 	public String getTableName() {
 		return tableName;

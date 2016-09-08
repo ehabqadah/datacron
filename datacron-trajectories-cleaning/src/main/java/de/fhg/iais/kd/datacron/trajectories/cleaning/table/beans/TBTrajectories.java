@@ -7,12 +7,12 @@ import java.util.Map;
  * @author kthellmann
  *
  */
-public class TBTrajectoriesOutput implements Serializable {
+public class TBTrajectories implements Serializable {
 
-	private static final long serialVersionUID = 8314828000076281322L;
+	private static final long serialVersionUID = -5129749027141884796L;
 
 	private String id;
-	
+
 	private int id_c;
 
 	private String date1;
@@ -42,42 +42,42 @@ public class TBTrajectoriesOutput implements Serializable {
 	private double acceleration;
 
 	private double turn;
-	
-    private Map<String, Double> abs_prop;
-	
+
+	private Map<String, Double> abs_prop;
+
 	private Map<String, Double> rel_prop;
-	
+
 	private boolean physicaltime;
-	
+
 	private boolean geocoordinates;
 
-	public TBTrajectoriesOutput() {
+	public TBTrajectories() {
 	}
 
-	public TBTrajectoriesOutput(//
+	public TBTrajectories(//
 			String id, //
-			int id_c,//
+			int id_c, //
 			String date1, //
 			String date2, //
 			int difftime, //
 			double x1, //
 			double x2, //
 			double diffx, //
-			double y1,//
+			double y1, //
 			double y2, //
 			double diffy, //
 			double distance, //
 			double speed, //
 			double course, //
 			double acceleration, //
-			double turn,//
-			Map<String, Double> abs_prop,//
+			double turn, //
+			Map<String, Double> abs_prop, //
 			Map<String, Double> rel_prop, //
 			boolean physicaltime, //
 			boolean geocoordinates) {
-		
+
 		super();
-		
+
 		this.id = id;
 		this.date1 = date1;
 		this.date2 = date2;
@@ -106,7 +106,7 @@ public class TBTrajectoriesOutput implements Serializable {
 	public void setId(String id) {
 		this.id = id;
 	}
-	
+
 	public int getId_c() {
 		return id_c;
 	}

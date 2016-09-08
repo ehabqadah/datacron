@@ -10,15 +10,16 @@ import de.fhg.iais.cassandra.ITableMetadata;
  * @author kthellmann
  *
  */
-public class TBMTrajectoriesOutputND implements ITableMetadata {
-
-	private static final long serialVersionUID = -2201479500537234350L;
+public class TBMStatistics implements ITableMetadata {
+	
+	private static final long serialVersionUID = 9018996810732107837L;
 
 	@Inject
-	@Named("spark.app.trajectories.output.nd")
+	@Named("spark.app.trajectories.statistics.input")
 	private String tableName;
-	private static final String DESCRIPTION = "trajectories table";
-
+	
+	private static final String DESCRIPTION = "Trajectories statistics input.";
+		
 	private static final ImmutableMap<String, String> partitionKeys = ImmutableMap.<String, String> builder() //
 			.put("id", "text") //
 			.build();
@@ -28,28 +29,27 @@ public class TBMTrajectoriesOutputND implements ITableMetadata {
 			.build();
 	
 	private static final ImmutableMap<String, String> columns = ImmutableMap.<String, String> builder() //
-			.put("date1", "text") //
-			.put("date2", "text") //
-			.put("difftime", "int") //
-			.put("x1", "double") //
-			.put("x2", "double") //
-			.put("diffx", "double") //
-			.put("y1", "double") //
-			.put("y2", "double") //
-			.put("diffy", "double") //
-			.put("distance", "double") //
-			.put("speed", "double") //
-			.put("course", "double") //
-			.put("acceleration", "double") //
-			.put("turn", "double") //
-			.put("abs_prop", "map<text, double>") //
-			.put("rel_prop", "map<text, double>") //
+			.put("nr_points", "int") //
+			.put("min_speed", "double") //
+			.put("max_speed", "double") //
+			.put("avg_speed", "double") //
+			.put("median_speed", "double") //
+			.put("min_acceleration", "double") //
+			.put("max_acceleration", "double") //
+			.put("avg_acceleration", "double") //
+			.put("median_acceleration", "double") //
+			.put("min_difftime", "double") //
+			.put("max_difftime", "double") //
+			.put("avg_difftime", "double") //
+			.put("median_difftime", "double") //
+			.put("min_date", "double") //
+			.put("max_date", "double") //
+			.put("min_X", "double") //
+			.put("max_X", "double") //
+			.put("min_Y", "double") //
+			.put("max_Y", "double") //
 			.build(); //
-
-	public String getTableName() {
-		return tableName;
-	}
-
+	
 	public ImmutableMap<String, String> getPartitionKeys() {
 		return partitionKeys;
 	}
@@ -61,6 +61,10 @@ public class TBMTrajectoriesOutputND implements ITableMetadata {
 	public ImmutableMap<String, String> getColumns() {
 		return columns;
 	}
+
+	public String getTableName() {
+		return tableName;
+	}	
 
 	@Override
 	public String getDescription() {

@@ -4,17 +4,21 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import de.fhg.iais.cassandra.ITableMetadata;
+
 /**
  * @author kthellmann
  *
  */
-public class TBMTrajectoriesStatisticsOutput extends TBMTrajectoriesOutputND {
+public class TBMTrajectoriesStatisticsOutput implements ITableMetadata {
+	
 	private static final long serialVersionUID = -4522163764638199250L;
 
 	@Inject
 	@Named("spark.app.trajectories.statistics.output")
 	private String tableName;
-	private static final String DESCRIPTION = "trajectories statistics table";
+	
+	private static final String DESCRIPTION = "Trajectories statistics output.";
 
 	private static final ImmutableMap<String, String> partitionKeys = ImmutableMap.<String, String> builder() //
 			.put("id", "text") //
@@ -44,12 +48,7 @@ public class TBMTrajectoriesStatisticsOutput extends TBMTrajectoriesOutputND {
 			.put("max_X", "double") //
 			.put("min_Y", "double") //
 			.put("max_Y", "double") //
-
 			.build(); //
-
-	public String getTableName() {
-		return tableName;
-	}
 
 	public ImmutableMap<String, String> getPartitionKeys() {
 		return partitionKeys;
@@ -61,6 +60,10 @@ public class TBMTrajectoriesStatisticsOutput extends TBMTrajectoriesOutputND {
 
 	public ImmutableMap<String, String> getColumns() {
 		return columns;
+	}
+
+	public String getTableName() {
+		return tableName;
 	}
 
 	@Override

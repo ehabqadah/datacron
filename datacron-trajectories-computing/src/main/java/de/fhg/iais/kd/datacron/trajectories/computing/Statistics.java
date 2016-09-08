@@ -113,7 +113,9 @@ public class Statistics implements Serializable {
 	 */
 	private JavaPairRDD<String, TBTrajectoriesStatisticsOutput> generateSpeedStatistics(JavaPairRDD<String, TBTrajectoriesOutput> inputRDD, JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statisticsRDD) {
 		// Create speedRDD: (TrajectoryId, TrajectorySpeed)
-		final JavaPairRDD<String, Double> speedRDD = calculateSpeedRDD(inputRDD);
+		final JavaPairRDD<String, Double> speedRDD = inputRDD
+				.mapValues(trajectory -> (trajectory.getSpeed() != 0.0 ? trajectory.getSpeed() : null))
+				.filter(tuple -> tuple._2() != null);
 
 		// Cache speedRDD
 		speedRDD.cache();
@@ -163,11 +165,6 @@ public class Statistics implements Serializable {
 		});
 		
 		return statistics5RDD;
-	}
-
-	public JavaPairRDD<String, Double> calculateSpeedRDD(JavaPairRDD<String, TBTrajectoriesOutput> inputRDD) {
-		return inputRDD.mapValues(trajectory -> (trajectory.getSpeed() != 0.0 ? trajectory.getSpeed() : null))
-				.filter(tuple -> tuple._2() != null);
 	}
 
 	/**
@@ -229,8 +226,7 @@ public class Statistics implements Serializable {
 			return new Tuple2<>(id, statistics);
 		});
 
-		return statistics5RDD;
-		
+		return statistics5RDD;		
 	}
 
 	/**
@@ -339,9 +335,7 @@ public class Statistics implements Serializable {
 	}
 
 	/**
-	 * Compute coordinates statistics for each trajectory
-	 * 
-	 * (bounding rectangle)
+	 * Compute coordinates statistics for each trajectory (bounding rectangle).
 	 * 
 	 * @param inputRDD: trajectories RDD
 	 * @return 
@@ -413,8 +407,7 @@ public class Statistics implements Serializable {
 	/**
 	 * Compute min of dates or coordinates of whole data
 	 * 
-	 * @param pairRDD:
-	 *            (Table, dates or coordinates)
+	 * @param pairRDD: (Table, dates or coordinates)
 	 * @return pairRDD: (Table, Min date or Min coordinate)
 	 */
 	private <T extends Comparable<T>> JavaPairRDD<String, T> computeMin(JavaPairRDD<String, T> pairRDD) {
@@ -450,7 +443,7 @@ public class Statistics implements Serializable {
 	/**
 	 * Compute max of acceleration or speed or timediff or dates or coordinates of a trajectory
 	 * 
-	 * @param pairRDD:(TrajectoryID, acceleration or speed or timediff or dates or coordinates)
+	 * @param pairRDD: (TrajectoryID, acceleration or speed or timediff or dates or coordinates)
 	 * @return pairRDD: (TrajectoryID, Max acceleration or Max speed or Max timediff or Max date or Max coordinate)
 	 */
 	private JavaPairRDD<String, Double> computeMaxDouble(JavaPairRDD<String, Double> pairRDD) {
@@ -462,7 +455,7 @@ public class Statistics implements Serializable {
 	/**
 	 * Compute average of acceleration or speed or timediff of a trajectory
 	 * 
-	 * @param pairRDD:(TrajectoryID, acceleration or speed or timediff)
+	 * @param pairRDD: (TrajectoryID, acceleration or speed or timediff)
 	 * @return pairRDD: (TrajectoryID, Avg acceleration or Avg speed or Avg timediff)
 	 */
 	private JavaPairRDD<String, Double> computeAverage(JavaPairRDD<String, Double> pairRDD) {
@@ -476,19 +469,18 @@ public class Statistics implements Serializable {
 	/**
 	 * Compute median of acceleration or speed or timediff of a trajectory
 	 * 
-	 * @param pairRDD:(TrajectoryID, acceleration or speed or timediff)
+	 * @param pairRDD: (TrajectoryID, acceleration or speed or timediff)
 	 * @return pairRDD: (TrajectoryID, Median of acceleration or Median of speed or Median of timediff)
 	 */
 	public JavaPairRDD<String, Double> computeMedian(JavaPairRDD<String, Double> pairRDD) {
 		return pairRDD.groupByKey().mapToPair(tuple -> {
-			String id = tuple._1();
-			ArrayList<Double> difftime = Lists.newArrayList(tuple._2());
+			final String id = tuple._1();
+			final ArrayList<Double> difftime = Lists.newArrayList(tuple._2());
 			Collections.sort(difftime);
 			double median = 0.0;
 
 			if (difftime.size() % 2 == 0) {
-				median = ((double) difftime.get(difftime.size() / 2) + (double) difftime.get(difftime.size() / 2 - 1))
-						/ 2;
+				median = ((double) difftime.get(difftime.size() / 2) + (double) difftime.get(difftime.size() / 2 - 1)) / 2;
 			} else {
 				median = (double) difftime.get(difftime.size() / 2);
 			}
