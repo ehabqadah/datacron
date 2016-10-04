@@ -1,4 +1,4 @@
-spark.app.input.data=medium_gennady_taxy_ny
+spark.app.input.data=taxy_ny
 spark.app.input.id=
 spark.app.input.date=PICKUP_DT
 spark.app.input.x=PICKUP_LAT

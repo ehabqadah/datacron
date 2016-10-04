@@ -12,6 +12,7 @@ public class Mapping implements Serializable {
 
 	private final List<String> id;
 	private final String date;
+	private final String datepattern;
 	private final String x;
 	private final String y;
 	private final List<String> other;
@@ -22,6 +23,7 @@ public class Mapping implements Serializable {
 	public Mapping(//
 			@Named("spark.app.input.idList") List<String> id, //
 			@Named("spark.app.input.date") String date, //
+			@Named("spark.app.input.date.pattern") String datepattern, //
 			@Named("spark.app.input.x") String x, //
 			@Named("spark.app.input.y") String y, //
 			@Named("spark.app.trajectories.additionalparamslist") List<String> other, //
@@ -30,6 +32,7 @@ public class Mapping implements Serializable {
 		
 		this.id = id;
 		this.date = date;
+		this.datepattern = datepattern;
 		this.x = x;
 		this.y = y;
 		this.other = other;
@@ -43,6 +46,10 @@ public class Mapping implements Serializable {
 
 	public String getDate() {
 		return date;
+	}
+	
+	public String getDatepattern() {
+		return datepattern;
 	}
 
 	public String getX() {

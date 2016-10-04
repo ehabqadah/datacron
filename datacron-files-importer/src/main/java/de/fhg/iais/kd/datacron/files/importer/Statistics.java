@@ -92,11 +92,11 @@ public class Statistics implements Serializable {
 
 			// Compute minDateRDD pro trajectory: (TrajectoryId, MinDate)
 			JavaPairRDD<String, DateTime> minDateRDD = this.computeMinDateTime(date1RDD);
-			minDateString = minDateRDD.collect().get(0)._2().toString();
+			minDateString = minDateRDD.first()._2().toString();
 
 			// Compute maxDateRDD pro trajectory: (TrajectoryId, MaxDate)
 			JavaPairRDD<String, DateTime> maxDateRDD = this.computeMaxDateTime(date1RDD);
-			maxDateString = maxDateRDD.collect().get(0)._2().toString();
+			maxDateString = maxDateRDD.first()._2().toString();
 		} else {
 			JavaPairRDD<String, Long> date2RDD = inputRDD.mapValues(input -> {
 				return Long.valueOf(input.getD());
@@ -106,11 +106,11 @@ public class Statistics implements Serializable {
 
 			// Compute minDateRDD pro trajectory: (TrajectoryId, MinDate)
 			JavaPairRDD<String, Long> minDateRDD = this.computeMin(date2RDD);
-			minDateString = minDateRDD.collect().get(0)._2().toString();
+			minDateString = minDateRDD.first()._2().toString();
 
 			// Compute maxDateRDD pro trajectory: (TrajectoryId, MaxDate)
 			JavaPairRDD<String, Long> maxDateRDD = this.computeMax(date2RDD);
-			maxDateString = maxDateRDD.collect().get(0)._2().toString();
+			maxDateString = maxDateRDD.first()._2().toString();
 		}
 
 		// Save time statistics to file:
@@ -154,10 +154,10 @@ public class Statistics implements Serializable {
 		// Compute maxyRDD of whole input data set: (TableId, MaxY)
 		JavaPairRDD<String, Double> maxYRDD = this.computeMax(yRDD);
 
-		String minX = minXRDD.collect().get(0)._2().toString();
-		String maxX = maxXRDD.collect().get(0)._2().toString();
-		String minY = minYRDD.collect().get(0)._2().toString();
-		String maxY = maxYRDD.collect().get(0)._2().toString();
+		String minX = minXRDD.first()._2().toString();
+		String maxX = maxXRDD.first()._2().toString();
+		String minY = minYRDD.first()._2().toString();
+		String maxY = maxYRDD.first()._2().toString();
 
 		// Save coordinates statistics to file:
 		 utils.appendToFile("wholeData.txt", "Min X: " + minX, "Max X: " + maxX, "Min Y: " + minY, "Max Y: " + maxY);

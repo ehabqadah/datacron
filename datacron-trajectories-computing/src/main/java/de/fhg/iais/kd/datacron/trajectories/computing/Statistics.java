@@ -1,8 +1,6 @@
 package de.fhg.iais.kd.datacron.trajectories.computing;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -12,10 +10,9 @@ import org.apache.spark.storage.StorageLevel;
 import org.joda.time.DateTime;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
+import de.fhg.iais.kd.datacron.common.utils.Utils;
 import de.fhg.iais.kd.datacron.trajectories.computing.data.provider.TrajectoriesStatisticsOutputProvider;
 import de.fhg.iais.kd.datacron.trajectories.computing.table.beans.TBTrajectoriesOutput;
 import de.fhg.iais.kd.datacron.trajectories.computing.table.beans.TBTrajectoriesStatisticsOutput;
@@ -31,10 +28,6 @@ public class Statistics implements Serializable {
 
 	@Inject
 	private transient TrajectoriesStatisticsOutputProvider statisticsOutputProvider;
-
-	@Inject
-	@Named("spark.app.trajectories.statistics")
-	private String statisticsOutputDir;
 
 	/**
 	 * Generate trajectories statistics:
@@ -92,7 +85,7 @@ public class Statistics implements Serializable {
 		for (Entry<String, Object> entry : points.entrySet()) {
 			TBTrajectoriesStatisticsOutput statistics = new TBTrajectoriesStatisticsOutput();
 			statistics.setId(entry.getKey());
-			statistics.setNr_points((int) entry.getValue());
+			statistics.setNr_points((long) entry.getValue());
 			statisticsOutput.add(statistics);
 		}
 
@@ -121,7 +114,7 @@ public class Statistics implements Serializable {
 		speedRDD.cache();
 
 		// Compute minSpeedRDD: (TrajectoryId, MinSpeed)
-		final JavaPairRDD<String, Double> minSpeedRDD = this.computeMinDouble(speedRDD);
+		final JavaPairRDD<String, Double> minSpeedRDD = Utils.computeMinDouble(speedRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics2RDD = minSpeedRDD.join(statisticsRDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			Double minspeed = arg0._2()._1();
@@ -132,7 +125,7 @@ public class Statistics implements Serializable {
 		});
 
 		// Compute maxSpeedRDD: (TrajectoryId, MaxSpeed)
-		final JavaPairRDD<String, Double> maxSpeedRDD = this.computeMaxDouble(speedRDD);
+		final JavaPairRDD<String, Double> maxSpeedRDD = Utils.computeMaxDouble(speedRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics3RDD = maxSpeedRDD.join(statistics2RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			Double maxspeed = arg0._2()._1();
@@ -143,7 +136,7 @@ public class Statistics implements Serializable {
 		});
 		
 		// Compute avgSpeedRDD: (TrajectoryId, AvgSpeed)
-		final JavaPairRDD<String, Double> avgSpeedRDD = this.computeAverage(speedRDD);
+		final JavaPairRDD<String, Double> avgSpeedRDD = Utils.computeAverage(speedRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics4RDD = avgSpeedRDD.join(statistics3RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			Double avgspeed = arg0._2()._1();
@@ -154,7 +147,7 @@ public class Statistics implements Serializable {
 		});
 
 		// Compute medianSpeedRDD: (TrajectoryId, MedianSpeed)
-		final JavaPairRDD<String, Double> medianSpeedRDD = this.computeMedian(speedRDD);
+		final JavaPairRDD<String, Double> medianSpeedRDD = Utils.computeMedian(speedRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics5RDD = medianSpeedRDD.join(statistics4RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			Double medianspeed = arg0._2()._1();
@@ -183,7 +176,7 @@ public class Statistics implements Serializable {
 		accelerationRDD.cache();
 
 		// Compute minAccelerationRDD: (TrajectoryId, MinAcceleration)
-		final JavaPairRDD<String, Double> minAccelerationRDD = this.computeMinDouble(accelerationRDD);
+		final JavaPairRDD<String, Double> minAccelerationRDD = Utils.computeMinDouble(accelerationRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics2RDD = minAccelerationRDD.join(statisticsRDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			Double minacceleration = arg0._2()._1();
@@ -194,7 +187,7 @@ public class Statistics implements Serializable {
 		});
 
 		// Compute maxAccelerationRDD: (TrajectoryId, MaxSpeed)
-		final JavaPairRDD<String, Double> maxAccelerationRDD = this.computeMaxDouble(accelerationRDD);
+		final JavaPairRDD<String, Double> maxAccelerationRDD = Utils.computeMaxDouble(accelerationRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics3RDD = maxAccelerationRDD.join(statistics2RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			Double maxacceleration = arg0._2()._1();
@@ -205,7 +198,7 @@ public class Statistics implements Serializable {
 		});
 		
 		// Compute avgAccelerationRDD: (TrajectoryId, AvgSpeed)
-		final JavaPairRDD<String, Double> avgAccelerationRDD = this.computeAverage(accelerationRDD);
+		final JavaPairRDD<String, Double> avgAccelerationRDD = Utils.computeAverage(accelerationRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics4RDD = avgAccelerationRDD.join(statistics3RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			Double avgacceleration = arg0._2()._1();
@@ -216,7 +209,7 @@ public class Statistics implements Serializable {
 		});
 		
 		// Compute medianAccelerationRDD: (TrajectoryId, MedianSpeed)
-		final JavaPairRDD<String, Double> medianAccelerationRDD = this.computeMedian(accelerationRDD);
+		final JavaPairRDD<String, Double> medianAccelerationRDD = Utils.computeMedian(accelerationRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics5RDD = medianAccelerationRDD.join(statistics4RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			Double medianacceleration = arg0._2()._1();
@@ -237,12 +230,12 @@ public class Statistics implements Serializable {
 	 */
 	private JavaPairRDD<String, TBTrajectoriesStatisticsOutput> generateDiffTimeStatistics(JavaPairRDD<String, TBTrajectoriesOutput> inputRDD, JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statisticsRDD) {
 		// Create timeRDD: (TrajectoryId, DiffTime)
-		final JavaPairRDD<String, Integer> timeRDD = inputRDD.mapValues(trajectory -> trajectory.getDifftime());
+		final JavaPairRDD<String, Double> timeRDD = inputRDD.mapValues(trajectory -> trajectory.getDifftime());
 		// Cache timeRDD
 		timeRDD.cache();
 
 		// Compute minDiffTimeRDD pro trajectory: (TrajectoryId, MinDiffTime)
-		final JavaPairRDD<String, Integer> minDiffTimeRDD = this.computeMin(timeRDD);
+		final JavaPairRDD<String, Double> minDiffTimeRDD = Utils.computeMin(timeRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics2RDD = minDiffTimeRDD.join(statisticsRDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			double mindifftime = arg0._2()._1();
@@ -253,7 +246,7 @@ public class Statistics implements Serializable {
 		});
 
 		// Compute maxDiffTimeRDD pro trajectory: (TrajectoryId, MaxDiffTime)
-		final JavaPairRDD<String, Integer> maxDiffTimeRDD = this.computeMax(timeRDD);
+		final JavaPairRDD<String, Double> maxDiffTimeRDD = Utils.computeMax(timeRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics3RDD = maxDiffTimeRDD.join(statistics2RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			double maxdifftime = arg0._2()._1();
@@ -264,7 +257,7 @@ public class Statistics implements Serializable {
 		});
 
 		// Compute avgDiffTimeRDD: (TrajectoryId, AvgDiffTime)
-		final JavaPairRDD<String, Double> avgDiffTimeRDD = this.computeAverage(timeRDD.mapValues(intVal -> Double.valueOf(intVal)));
+		final JavaPairRDD<String, Double> avgDiffTimeRDD = Utils.computeAverage(timeRDD.mapValues(intVal -> Double.valueOf(intVal)));
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics4RDD = avgDiffTimeRDD.join(statistics3RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			double avgdifftime = arg0._2()._1();
@@ -275,7 +268,7 @@ public class Statistics implements Serializable {
 		});
 
 		// Compute medianDiffTimeRDD: (TrajectoryId, MedianDiffTime)
-		final JavaPairRDD<String, Double> medianDiffTimeRDD = this.computeMedian(timeRDD.mapValues(intVal -> Double.valueOf(intVal)));
+		final JavaPairRDD<String, Double> medianDiffTimeRDD = Utils.computeMedian(timeRDD.mapValues(intVal -> Double.valueOf(intVal)));
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics5RDD = medianDiffTimeRDD.join(statistics4RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			double mediandifftime = arg0._2()._1();
@@ -310,7 +303,7 @@ public class Statistics implements Serializable {
 		dateRDD.cache();
 
 		// Compute minDateRDD pro trajectory: (TrajectoryId, MinDate)
-		final JavaPairRDD<String, Long> minDateRDD = this.computeMin(dateRDD);
+		final JavaPairRDD<String, Long> minDateRDD = Utils.computeMin(dateRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics2RDD = minDateRDD.join(statisticsRDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			double mindate = arg0._2()._1();
@@ -321,7 +314,7 @@ public class Statistics implements Serializable {
 		});
 
 		// Compute maxDateRDD pro trajectory: (TrajectoryId, MaxDate)
-		final JavaPairRDD<String, Long> maxDateRDD = this.computeMax(dateRDD);
+		final JavaPairRDD<String, Long> maxDateRDD = Utils.computeMax(dateRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics3RDD = maxDateRDD.join(statistics2RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			double maxdate = arg0._2()._1();
@@ -350,7 +343,7 @@ public class Statistics implements Serializable {
 		xRDD.cache();
 
 		// Compute minXRDD pro trajectory: (TrajectoryId, MinX)
-		final JavaPairRDD<String, Double> minXRDD = this.computeMinDouble(xRDD);
+		final JavaPairRDD<String, Double> minXRDD = Utils.computeMinDouble(xRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics2RDD = minXRDD.join(statisticsRDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			double minx = arg0._2()._1();
@@ -361,7 +354,7 @@ public class Statistics implements Serializable {
 		});
 
 		// Compute maxXRDD pro trajectory: (TrajectoryId, MaxX)
-		final JavaPairRDD<String, Double> maxXRDD = this.computeMaxDouble(xRDD);
+		final JavaPairRDD<String, Double> maxXRDD = Utils.computeMaxDouble(xRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics3RDD = maxXRDD.join(statistics2RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			double maxx = arg0._2()._1();
@@ -380,7 +373,7 @@ public class Statistics implements Serializable {
 		yRDD.cache();
 
 		// Compute minyRDD pro trajectory: (TrajectoryId, MinY)
-		final JavaPairRDD<String, Double> minYRDD = this.computeMinDouble(yRDD);
+		final JavaPairRDD<String, Double> minYRDD = Utils.computeMinDouble(yRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics4RDD = minYRDD.join(statistics3RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			double miny = arg0._2()._1();
@@ -391,7 +384,7 @@ public class Statistics implements Serializable {
 		});
 
 		// Compute maxyRDD pro trajectory: (TrajectoryId, MaxY)
-		final JavaPairRDD<String, Double> maxYRDD = this.computeMaxDouble(yRDD);
+		final JavaPairRDD<String, Double> maxYRDD = Utils.computeMaxDouble(yRDD);
 		JavaPairRDD<String, TBTrajectoriesStatisticsOutput> statistics5RDD = maxYRDD.join(statistics4RDD).mapToPair(arg0 -> {
 			String id = arg0._1();
 			double maxy = arg0._2()._1();
@@ -402,90 +395,5 @@ public class Statistics implements Serializable {
 		});
 
 		return statistics5RDD;
-	}
-
-	/**
-	 * Compute min of dates or coordinates of whole data
-	 * 
-	 * @param pairRDD: (Table, dates or coordinates)
-	 * @return pairRDD: (Table, Min date or Min coordinate)
-	 */
-	private <T extends Comparable<T>> JavaPairRDD<String, T> computeMin(JavaPairRDD<String, T> pairRDD) {
-		return pairRDD.reduceByKey((v1, v2) -> {
-			return (v1.compareTo(v2) < 0 ? v1 : v2);
-		});
-	}
-
-	/**
-	 * Compute max of dates or coordinates of whole data
-	 * 
-	 * @param pairRDD: (Table, dates or coordinates)
-	 * @return pairRDD: (Table, Max date or Max coordinate)
-	 */
-	private <T extends Comparable<T>> JavaPairRDD<String, T> computeMax(JavaPairRDD<String, T> pairRDD) {
-		return pairRDD.reduceByKey((v1, v2) -> {
-			return (v1.compareTo(v2) > 0 ? v1 : v2);
-		});
-	}
-
-	/**
-	 * Compute min of acceleration or speed or timediff or dates or coordinates of a trajectory
-	 * 
-	 * @param pairRDD:(TrajectoryID, acceleration or speed or timediff or dates or coordinates)
-	 * @return pairRDD: (TrajectoryID, Min acceleration or Min speed or Min timediff or Min date or Min coordinate)
-	 */
-	private JavaPairRDD<String, Double> computeMinDouble(JavaPairRDD<String, Double> pairRDD) {
-		return pairRDD.reduceByKey((v1, v2) -> {
-			return (v1 < v2 ? v1 : v2);
-		});
-	}
-
-	/**
-	 * Compute max of acceleration or speed or timediff or dates or coordinates of a trajectory
-	 * 
-	 * @param pairRDD: (TrajectoryID, acceleration or speed or timediff or dates or coordinates)
-	 * @return pairRDD: (TrajectoryID, Max acceleration or Max speed or Max timediff or Max date or Max coordinate)
-	 */
-	private JavaPairRDD<String, Double> computeMaxDouble(JavaPairRDD<String, Double> pairRDD) {
-		return pairRDD.reduceByKey((v1, v2) -> {
-			return (v1 > v2 ? v1 : v2);
-		});
-	}
-
-	/**
-	 * Compute average of acceleration or speed or timediff of a trajectory
-	 * 
-	 * @param pairRDD: (TrajectoryID, acceleration or speed or timediff)
-	 * @return pairRDD: (TrajectoryID, Avg acceleration or Avg speed or Avg timediff)
-	 */
-	private JavaPairRDD<String, Double> computeAverage(JavaPairRDD<String, Double> pairRDD) {
-		final Map<String, Object> nrTraj = pairRDD.countByKey();
-
-		return pairRDD.reduceByKey((v1, v2) -> {
-			return v1 + v2;
-		}).mapToPair(tuple -> new Tuple2<>(tuple._1(), tuple._2() / (long) nrTraj.get(tuple._1())));
-	}
-
-	/**
-	 * Compute median of acceleration or speed or timediff of a trajectory
-	 * 
-	 * @param pairRDD: (TrajectoryID, acceleration or speed or timediff)
-	 * @return pairRDD: (TrajectoryID, Median of acceleration or Median of speed or Median of timediff)
-	 */
-	public JavaPairRDD<String, Double> computeMedian(JavaPairRDD<String, Double> pairRDD) {
-		return pairRDD.groupByKey().mapToPair(tuple -> {
-			final String id = tuple._1();
-			final ArrayList<Double> difftime = Lists.newArrayList(tuple._2());
-			Collections.sort(difftime);
-			double median = 0.0;
-
-			if (difftime.size() % 2 == 0) {
-				median = ((double) difftime.get(difftime.size() / 2) + (double) difftime.get(difftime.size() / 2 - 1)) / 2;
-			} else {
-				median = (double) difftime.get(difftime.size() / 2);
-			}
-
-			return new Tuple2<>(id, median);
-		});
 	}	
 }

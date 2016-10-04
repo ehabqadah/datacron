@@ -69,9 +69,9 @@ public class AnalyticsAppModule extends AbstractModule {
 			properties.load(new FileReader(configurations));
 			Names.bindProperties(this.binder(), properties);
 		} catch (final FileNotFoundException e) {
-			System.out.println("Configuration file not found.");
+			System.err.println("Configuration file not found.");
 		} catch (final IOException e) {
-			System.out.println("Can't read configuration file.");
+			System.err.println("Can't read configuration file.");
 		}
 	}
 

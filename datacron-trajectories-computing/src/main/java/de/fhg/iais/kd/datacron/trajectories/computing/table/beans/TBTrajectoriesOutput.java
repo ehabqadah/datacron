@@ -19,7 +19,7 @@ public class TBTrajectoriesOutput implements Serializable {
 
 	private String date2;
 
-	private int difftime;
+	private double difftime;
 
 	private double x1;
 
@@ -59,7 +59,7 @@ public class TBTrajectoriesOutput implements Serializable {
 			int id_c,//
 			String date1, //
 			String date2, //
-			int difftime, //
+			double difftime, //
 			double x1, //
 			double x2, //
 			double diffx, //
@@ -131,11 +131,11 @@ public class TBTrajectoriesOutput implements Serializable {
 		this.date2 = date2;
 	}
 
-	public int getDifftime() {
+	public double getDifftime() {
 		return difftime;
 	}
 
-	public void setDifftime(int difftime) {
+	public void setDifftime(double difftime) {
 		this.difftime = difftime;
 	}
 

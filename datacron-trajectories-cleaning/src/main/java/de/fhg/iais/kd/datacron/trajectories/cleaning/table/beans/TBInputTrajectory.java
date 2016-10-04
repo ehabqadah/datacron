@@ -7,7 +7,7 @@ import java.util.Map;
  * @author kthellmann
  *
  */
-public class TBTrajectories implements Serializable {
+public class TBInputTrajectory implements Serializable {
 
 	private static final long serialVersionUID = -5129749027141884796L;
 
@@ -47,14 +47,10 @@ public class TBTrajectories implements Serializable {
 
 	private Map<String, Double> rel_prop;
 
-	private boolean physicaltime;
-
-	private boolean geocoordinates;
-
-	public TBTrajectories() {
+	public TBInputTrajectory() {
 	}
 
-	public TBTrajectories(//
+	public TBInputTrajectory(//
 			String id, //
 			int id_c, //
 			String date1, //
@@ -72,13 +68,12 @@ public class TBTrajectories implements Serializable {
 			double acceleration, //
 			double turn, //
 			Map<String, Double> abs_prop, //
-			Map<String, Double> rel_prop, //
-			boolean physicaltime, //
-			boolean geocoordinates) {
+			Map<String, Double> rel_prop) {
 
 		super();
 
 		this.id = id;
+		this.id_c = id_c;
 		this.date1 = date1;
 		this.date2 = date2;
 		this.difftime = difftime;
@@ -95,10 +90,8 @@ public class TBTrajectories implements Serializable {
 		this.turn = turn;
 		this.abs_prop = abs_prop;
 		this.rel_prop = rel_prop;
-		this.physicaltime = physicaltime;
-		this.geocoordinates = geocoordinates;
 	}
-
+	
 	public String getId() {
 		return id;
 	}
@@ -243,26 +236,10 @@ public class TBTrajectories implements Serializable {
 		this.rel_prop = rel_prop;
 	}
 
-	public boolean isPhysicaltime() {
-		return physicaltime;
-	}
-
-	public void setPhysicaltime(boolean physicaltime) {
-		this.physicaltime = physicaltime;
-	}
-
-	public boolean isGeocoordinates() {
-		return geocoordinates;
-	}
-
-	public void setGeocoordinates(boolean geocoordinates) {
-		this.geocoordinates = geocoordinates;
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("TBTrajectoriesOutput [id=");
+		builder.append("TBTrajectories [id=");
 		builder.append(id);
 		builder.append(", id_c=");
 		builder.append(id_c);
@@ -298,10 +275,6 @@ public class TBTrajectories implements Serializable {
 		builder.append(abs_prop);
 		builder.append(", rel_prop=");
 		builder.append(rel_prop);
-		builder.append(", physicaltime=");
-		builder.append(physicaltime);
-		builder.append(", geocoordinates=");
-		builder.append(geocoordinates);
 		builder.append("]");
 		return builder.toString();
 	}

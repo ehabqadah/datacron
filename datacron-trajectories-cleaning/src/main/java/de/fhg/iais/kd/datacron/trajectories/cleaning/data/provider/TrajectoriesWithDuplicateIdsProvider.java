@@ -6,13 +6,13 @@ import com.google.inject.Inject;
 
 import de.fhg.iais.cassandra.AbstractDataProvider;
 import de.fhg.iais.cassandra.Cassandra;
-import de.fhg.iais.kd.datacron.trajectories.cleaning.table.beans.TBTrajectories;
+import de.fhg.iais.kd.datacron.trajectories.cleaning.table.beans.TBOutlierTrajectory;
 import de.fhg.iais.kd.datacron.trajectories.cleaning.table.metadata.TBMTrajectoriesWithDuplicateIdsOutput;
 
 /**
  * @author kthellmann
  */
-public class TrajectoriesWithDuplicateIdsProvider extends AbstractDataProvider<TBTrajectories> {
+public class TrajectoriesWithDuplicateIdsProvider extends AbstractDataProvider<TBOutlierTrajectory> {
 
 	private static final long serialVersionUID = 5624798897127022424L;
 
@@ -22,7 +22,7 @@ public class TrajectoriesWithDuplicateIdsProvider extends AbstractDataProvider<T
 			JavaSparkContext sparkContext, //
 			Cassandra cassandra) {
 
-		super(tableMetadata, sparkContext, cassandra, TBTrajectories.class);
+		super(tableMetadata, sparkContext, cassandra, TBOutlierTrajectory.class);
 	}
 
 }

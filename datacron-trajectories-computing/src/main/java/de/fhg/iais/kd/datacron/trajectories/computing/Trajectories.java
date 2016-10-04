@@ -20,12 +20,12 @@ import com.google.common.collect.PeekingIterator;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import de.fhg.iais.kd.datacron.common.utils.Utils;
+import de.fhg.iais.kd.datacron.trajectories.computing.data.provider.ParametrizedInputProvider;
 import de.fhg.iais.kd.datacron.trajectories.computing.data.provider.TrajectoriesOutputProviderND;
 import de.fhg.iais.kd.datacron.trajectories.computing.data.provider.TrajectoriesOutputProviderNDS;
-import de.fhg.iais.kd.datacron.trajectories.computing.data.provider.ParametrizedInputProvider;
 import de.fhg.iais.kd.datacron.trajectories.computing.table.beans.TBTrajectoriesOutput;
 import de.fhg.iais.kd.datacron.trajectories.computing.table.beans.TBTrajectoriesParametrizedInput;
-import de.fhg.iais.kd.datacron.trajectories.computing.utils.Utils;
 import scala.Tuple2;
 
 /**
@@ -85,10 +85,13 @@ public class Trajectories implements Serializable {
 		});
 
 		// 3. Compute trajectories
-		// 3.1. Group records from input2RDD by id pair1RDD := (id, nonduplicates records) NDR
-		JavaPairRDD<String, Iterable<TBTrajectoriesParametrizedInput>> pair1RDD = input2RDD.groupBy(input -> input.getId());
+		// 3.1. Group records from input2RDD by id pair1RDD := (id,
+		// nonduplicates records) NDR
+		JavaPairRDD<String, Iterable<TBTrajectoriesParametrizedInput>> pair1RDD = input2RDD
+				.groupBy(input -> input.getId());
 
-		// 3.2 Compute trajectory attributes: time-/coordinate differences, distance, course, speed, trace and acceleration
+		// 3.2 Compute trajectory attributes: time-/coordinate differences,
+		// distance, course, speed, trace and acceleration
 		JavaRDD<TBTrajectoriesOutput> result1RDD = computeTrajectories(pair1RDD);
 
 		// Cache result
@@ -128,12 +131,14 @@ public class Trajectories implements Serializable {
 			return new Tuple2<>(tuple._1(), stationaryPointsList);
 		});
 
-		// Compute join1RDD := pair1RDD.join(pair2RDD) by id -> (list non duplicates, list stationary points)
-		JavaPairRDD<String, Tuple2<Iterable<TBTrajectoriesParametrizedInput>, Iterable<TBTrajectoriesOutput>>> join1RDD = pair1RDD.join(pair3RDD);
+		// Compute join1RDD := pair1RDD.join(pair2RDD) by id -> (list non
+		// duplicates, list stationary points)
+		JavaPairRDD<String, Tuple2<Iterable<TBTrajectoriesParametrizedInput>, Iterable<TBTrajectoriesOutput>>> join1RDD = pair1RDD
+				.join(pair3RDD);
 
 		// Create pair4RDD := (id, nonduplicates nonstationary records) //NDS
 		final boolean timeIsPhysical = this.parametrizeInputProvider.isTimeIsPhysical();
-		
+
 		JavaPairRDD<String, Iterable<TBTrajectoriesParametrizedInput>> pair4RDD = join1RDD.mapToPair(tuple -> {
 			final String id = tuple._1();
 			final Iterable<TBTrajectoriesParametrizedInput> nonDuplicatesList = tuple._2()._1();
@@ -197,7 +202,8 @@ public class Trajectories implements Serializable {
 							.compare(firstRecord.getD(), secondRecord.getD()))
 					.immutableSortedCopy(records);
 
-			// Compute list of counted input records tuples: (id, [<1,(current, next)>, <2, (current, next)>, ...])
+			// Compute list of counted input records tuples: (id, [<1,(current,
+			// next)>, <2, (current, next)>, ...])
 			final Builder<Tuple2<Integer, Tuple2<TBTrajectoriesParametrizedInput, TBTrajectoriesParametrizedInput>>> pairRecordsBuilder = ImmutableList
 					.builder();
 			final PeekingIterator<TBTrajectoriesParametrizedInput> peekIterator1 = Iterators
@@ -234,10 +240,10 @@ public class Trajectories implements Serializable {
 				final double x2 = record2.getX();
 				final double y2 = record2.getY();
 
-				int diffTime = 0;
+				double diffTime = 0.0;
 
 				if (isPhysicalTime) {
-					diffTime = (int) TimeUnit.MILLISECONDS.toDays(date2 - date1);
+					diffTime = ((double) (date2 - date1)) / (1000 * 60 * 60 * 24);
 				} else {
 					diffTime = Math.toIntExact(date2 - date1);
 				}
@@ -245,13 +251,7 @@ public class Trajectories implements Serializable {
 				final double diffX = x2 - x1;
 				final double diffY = y2 - y1;
 
-				double distance = 0.0;
-
-				if (areGeoCoordinates) {
-					distance = Utils.greatCircle(y1, x1, y2, x2);
-				} else {
-					distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-				}
+				double distance = calculateDistance(areGeoCoordinates, x1, y1, x2, y2);
 
 				final Map<String, Double> absoluteParamsDifferencesMap = subtractMap(record2.getAbs_prop(),
 						record1.getAbs_prop());
@@ -259,9 +259,10 @@ public class Trajectories implements Serializable {
 				double speed = 0.0;
 
 				final Map<String, Double> relativeParamsValuesMap;
-				
+
 				if (diffTime > 0) {
-					final Map<String, Double> relativeParamsDifferencesMap = subtractMap(record2.getRel_prop(), record1.getRel_prop());
+					final Map<String, Double> relativeParamsDifferencesMap = subtractMap(record2.getRel_prop(),
+							record1.getRel_prop());
 
 					if (isPhysicalTime) {
 						speed = distance / (diffTime * 24);
@@ -274,7 +275,7 @@ public class Trajectories implements Serializable {
 					relativeParamsValuesMap = null;
 				}
 
-			    double course = 180 * Math.atan2(diffX, diffY) / Math.PI;
+				double course = 180 * Math.atan2(diffX, diffY) / Math.PI;
 
 				if (course < 0) {
 					course += 360;
@@ -284,15 +285,12 @@ public class Trajectories implements Serializable {
 				trajectory.setId(id);
 				trajectory.setId_c(trajectoryCounter);
 
-				if (isPhysicalTime) {
-					trajectory.setDate1(String.valueOf(new DateTime(date1)));
-					trajectory.setDate2(String.valueOf(new DateTime(date2)));
-				} else {
-					trajectory.setDate1(String.valueOf(date1));
-					trajectory.setDate2(String.valueOf(date2));
-				}
+				String date1Str = calculateTimeAsString(isPhysicalTime, date1);
+				String date2Str = calculateTimeAsString(isPhysicalTime, date2);
 
 				trajectory.setDifftime(diffTime);
+				trajectory.setDate1(date1Str);
+				trajectory.setDate2(date2Str);
 				trajectory.setX1(x1);
 				trajectory.setX2(x2);
 				trajectory.setDiffx(diffX);
@@ -313,12 +311,13 @@ public class Trajectories implements Serializable {
 			final ImmutableList<TBTrajectoriesOutput> trajectoriesList = trajectoriesBuilder1.build();
 
 			// Compute acceleration and turn btw. current and next record pair
-			final PeekingIterator<TBTrajectoriesOutput> peekIterator2 = Iterators.peekingIterator(trajectoriesList.iterator());
+			final PeekingIterator<TBTrajectoriesOutput> peekIterator2 = Iterators
+					.peekingIterator(trajectoriesList.iterator());
 			final Builder<TBTrajectoriesOutput> trajectoriesBuilder2 = ImmutableList.builder();
 
 			while (peekIterator2.hasNext()) {
 				TBTrajectoriesOutput recordsPair1 = peekIterator2.next();
-				final long diffTime1 = recordsPair1.getDifftime();
+				final double diffTime1 = recordsPair1.getDifftime();
 				final double speed1 = recordsPair1.getSpeed();
 				final double course1 = recordsPair1.getCourse();
 
@@ -350,6 +349,28 @@ public class Trajectories implements Serializable {
 			return trajectoriesBuilder2.build();
 
 		}).flatMap(result -> result);
+	}
+
+	public static String calculateTimeAsString(final boolean isPhysicalTime, final long date1) {
+		String date1Str;
+		if (isPhysicalTime) {
+			date1Str = String.valueOf(new DateTime(date1));
+		} else {
+			date1Str = String.valueOf(date1);
+		}
+		return date1Str;
+	}
+
+	public static double calculateDistance(final boolean areGeoCoordinates, final double x1, final double y1,
+			final double x2, final double y2) {
+		double distance;
+
+		if (areGeoCoordinates) {
+			distance = Utils.greatCircle(y1, x1, y2, x2);
+		} else {
+			distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+		}
+		return distance;
 	}
 
 	/**
@@ -393,5 +414,5 @@ public class Trajectories implements Serializable {
 
 		return dividedValuesMap;
 	}
-	
+
 }

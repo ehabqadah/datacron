@@ -1,0 +1,8 @@
+spark.app.trajectories.inputdata=milan
+spark.app.trajectories.output.nd=milan_nd
+spark.app.trajectories.output.nds=milan_nds
+spark.app.trajectories.statistics.output=milan_stats
+spark.app.trajectories.absoluteparams=
+spark.app.trajectories.relativeparams=
+spark.app.trajectories.physicaltime=true
+spark.app.trajectories.geocoordinates=true

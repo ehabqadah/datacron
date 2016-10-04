@@ -147,34 +147,4 @@ public class AnalyticsAppModule extends AbstractModule {
 		return sparkContext;
 	}
 
-	/**
-	 * @param absoluteParamsString
-	 * @return
-	 */
-	@Provides
-	@Named("spark.app.trajectories.absoluteparamslist")
-	public List<String> provideAbsoluteParamsList(@Named("spark.app.trajectories.absoluteparams") String absoluteParamsString) {
-		if(absoluteParamsString.isEmpty()) {
-			return Collections.emptyList();
-		}
-		
-		String[] absoluteParamsArray = absoluteParamsString.split(",");
-		return ImmutableList.copyOf(absoluteParamsArray);
-	}
-
-	/**
-	 * @param relativeParamsString
-	 * @return
-	 */
-	@Provides
-	@Named("spark.app.trajectories.relativeparamslist")
-	public List<String> provideRelativeParamsList(@Named("spark.app.trajectories.relativeparams") String relativeParamsString) {
-		if(relativeParamsString.isEmpty()) {
-			return Collections.emptyList();
-		}
-		
-		String[] relativeParamsArray = relativeParamsString.split(",");
-		return ImmutableList.copyOf(relativeParamsArray);
-	}
-
 }

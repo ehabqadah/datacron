@@ -1,0 +1,9 @@
+spark.app.input.data=vavel_20160321_tramwaje
+spark.app.input.id=Lines,Brigade
+spark.app.input.date=Time
+spark.app.input.date.pattern=yyyy-MM-ddTHH:mm:ss
+spark.app.input.x=Lon
+spark.app.input.y=Lat
+spark.app.input.other=
+spark.app.input.physicaltime=true
+spark.app.input.geocoordinates=true

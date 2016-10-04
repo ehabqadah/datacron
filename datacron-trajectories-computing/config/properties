@@ -17,7 +17,9 @@ spark.serializer=org.apache.spark.serializer.KryoSerializer
 # CASSANDRA 
 #------------------------------------------------------------------------------
 cassandra.seed=129.26.75.2
-cassandra.keyspace=datacron492016
+cassandra.keyspace=datacron2892016
+#cassandra.seed=cassandra1
+#cassandra.keyspace=datacron
 cassandra.replication.factor=1
 cassandra.replication.strategy=SimpleStrategy
 
@@ -25,4 +27,5 @@ cassandra.replication.strategy=SimpleStrategy
 # SPARK CASSANDRA CONNECTOR
 #------------------------------------------------------------------------------
 spark.cassandra.connection.host=129.26.75.2
+#spark.cassandra.connection.host=cassandra1
 spark.cassandra.output.consistency.level=ALL

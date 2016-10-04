@@ -1,0 +1,9 @@
+spark.app.input.data=sankt_augustin
+spark.app.input.id=trID
+spark.app.input.date=time
+spark.app.input.date.pattern=dd/MM/yyyy HH:mm:ss
+spark.app.input.x=X
+spark.app.input.y=Y
+spark.app.input.other=
+spark.app.input.physicaltime=true
+spark.app.input.geocoordinates=true

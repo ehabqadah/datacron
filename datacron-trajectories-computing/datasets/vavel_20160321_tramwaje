@@ -1,0 +1,8 @@
+spark.app.trajectories.inputdata=vavel_20160321_tramwaje
+spark.app.trajectories.output.nd=vavel_20160321_tramwaje_nd
+spark.app.trajectories.output.nds=vavel_20160321_tramwaje_nds
+spark.app.trajectories.statistics.output=vavel_20160321_tramwaje_stats
+spark.app.trajectories.absoluteparams=
+spark.app.trajectories.relativeparams=
+spark.app.trajectories.physicaltime=true
+spark.app.trajectories.geocoordinates=true

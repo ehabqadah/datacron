@@ -1,7 +1,9 @@
 spark.app.input.data=birds
-spark.app.input.tablename=birds
 spark.app.input.id=id
 spark.app.input.date=d
+spark.app.input.date.pattern=yyyy-MM-dd
 spark.app.input.x=x
 spark.app.input.y=y
 spark.app.input.other=counter
+spark.app.input.physicaltime=true
+spark.app.input.geocoordinates=true

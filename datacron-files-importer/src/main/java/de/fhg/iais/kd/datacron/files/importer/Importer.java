@@ -5,8 +5,10 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import java.io.BufferedReader;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,77 +111,100 @@ public class Importer implements Serializable {
 					String row = tuple._1()._2();
 					Long index = tuple._2();
 
-					List<String> columnNames = Arrays.asList(columns.split(","));
+					if (!isNullOrEmpty(row)) {
 
-					List<String> ids = mapping.getId();
-					int[] idColumns = new int[ids.size()];
-					
-					for(int i=0; i<ids.size(); i++){
-						idColumns[i] = columnNames.indexOf(ids.get(i));
-					}
-					
-					//int idColumn = columnNames.indexOf(mapping.getId());
-					int dateColumn = columnNames.indexOf(mapping.getDate());
-					int xColumn = columnNames.indexOf(mapping.getX());
-					int yColumn = columnNames.indexOf(mapping.getY());
+						List<String> columnNames = Arrays.asList(columns.split(","));
+						List<String> ids = mapping.getId();
+						int[] idColumns = new int[ids.size()];
 
-					Map<String, Integer> otherColumns = new LinkedHashMap<>();
-					for (String othercolumn : mapping.getOther()) {
-						otherColumns.put(othercolumn, columnNames.indexOf(othercolumn));
-					}
-
-					String[] rowEntries = row.split(",");
-					String id = "";
-					
-					for(int i=0; i<idColumns.length; i++){
-						int idC = idColumns[i];
-						if(i > 0) {
-							id += "$";
+						for (int i = 0; i < ids.size(); i++) {
+							idColumns[i] = columnNames.indexOf(ids.get(i));
 						}
-						id += rowEntries[idC];
-					}
-					
-					long id_c = index;
 
-					String dateString = rowEntries[dateColumn];
-					String xString = rowEntries[xColumn];
-					String yString = rowEntries[yColumn];
+						int dateColumn = columnNames.indexOf(mapping.getDate());
+						int xColumn = columnNames.indexOf(mapping.getX());
+						int yColumn = columnNames.indexOf(mapping.getY());
 
-					Map<String, String> additional = new LinkedHashMap<>();
-					for (Map.Entry<String, Integer> entry : otherColumns.entrySet()) {
-						String additionalEntryString = rowEntries[entry.getValue()];
-						List<String> outliers = outlierAttributes.get(entry.getKey());
+						Map<String, Integer> otherColumns = new LinkedHashMap<>();
 
-						if (outliers == null || !outliers.contains(additionalEntryString)) {
-							additional.put(entry.getKey(), additionalEntryString);
+						for (String othercolumn : mapping.getOther()) {
+							otherColumns.put(othercolumn, columnNames.indexOf(othercolumn));
+						}
+
+						String[] rowEntries = row.split(",");
+						String id = "";
+
+						String dateString = null;
+						String xString = null;
+						String yString = null;
+
+						try {
+
+							for (int i = 0; i < idColumns.length; i++) {
+								int idC = idColumns[i];
+								if (i > 0) {
+									id += "$";
+								}
+								id += rowEntries[idC];
+							}
+
+							dateString = rowEntries[dateColumn];
+							xString = rowEntries[xColumn];
+							yString = rowEntries[yColumn];
+
+						} catch (Exception e) {
+							System.out.println(
+									"Detected error in data id_c: " + index + " row: " + row + " Exception: " + e);
+						}
+
+						long id_c = index;
+
+						Map<String, String> additional = new LinkedHashMap<>();
+
+						for (Map.Entry<String, Integer> entry : otherColumns.entrySet()) {
+							String additionalEntryString = rowEntries[entry.getValue()];
+							List<String> outliers = outlierAttributes.get(entry.getKey());
+
+							if (outliers == null || !outliers.contains(additionalEntryString)) {
+								additional.put(entry.getKey(), additionalEntryString);
+							} else {
+								getLogger().warn("Detected attribute outlier in trajectory " + id + "[" + id_c + "]: name=" + entry.getKey() + " outlier=" + additionalEntryString);
+							}
+						}
+
+						if (!isNullOrEmpty(id) && //
+						!isNullOrEmpty(xString) && //
+						!isNullOrEmpty(yString) && //
+						!isNullOrEmpty(dateString) && //
+						!outlierPoints.contains(xString) && //
+						!outlierPoints.contains(yString) && //
+						!outlierDates.contains(dateString)) {							
+							String formattedDateString = null;
+							if (mapping.isPhysicaltime()) {
+								Date date = new SimpleDateFormat(mapping.getDatepattern()).parse(dateString);
+								formattedDateString = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(date);
+							} else {
+								formattedDateString = dateString;
+							}
+							return new TBOutput(id, id_c, formattedDateString, xString, yString, additional);
 						} else {
-							getLogger().warn("Detected attribute outlier in trajectory " + id + "[" + id_c + "]: name="+ entry.getKey() + " outlier=" + additionalEntryString);
+							getLogger().warn("Detected point/date outlier in trajectory " + id + "[" + id_c + "]: x="
+									+ xString + " y=" + yString + " date=" + dateString);
 						}
-					}
-
-					if (!isNullOrEmpty(id) && //
-					!isNullOrEmpty(xString) && //
-					!isNullOrEmpty(yString) && //
-					!isNullOrEmpty(dateString) && //
-					!outlierPoints.contains(xString) && //
-					!outlierPoints.contains(yString) && //
-					!outlierDates.contains(dateString)) {
-						return new TBOutput(id, id_c, dateString, xString, yString, additional);
-					} else {
-						getLogger().warn("Detected point/date outlier in trajectory " + id + "[" + id_c + "]: x=" + xString+ " y=" + yString + " date=" + dateString);
 					}
 
 					return null;
+
 				}).filter(record -> record != null);
-		
+
 		// Cache resultRDD
 		resultRDD.persist(StorageLevel.MEMORY_ONLY());
 
 		// Compute input data statistics
 		dataStatistics.generate(resultRDD, outputProvider.getTableName());
-		
+
 		// Write data to table
-		this.outputProvider.updateTable(resultRDD);	
+		this.outputProvider.updateTable(resultRDD);
 
 		// Close connection to Cassandra store
 		this.outputProvider.close();

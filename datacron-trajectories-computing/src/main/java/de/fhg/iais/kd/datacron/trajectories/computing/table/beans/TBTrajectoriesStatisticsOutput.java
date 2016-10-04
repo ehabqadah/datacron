@@ -14,7 +14,7 @@ public class TBTrajectoriesStatisticsOutput implements Serializable {
 	
 	private int id_c;
 
-	private int nr_points;
+	private long nr_points;
 
 	private double min_speed;
 
@@ -58,7 +58,7 @@ public class TBTrajectoriesStatisticsOutput implements Serializable {
 	public TBTrajectoriesStatisticsOutput(//
 			String id,//
 			int id_c, //
-			int nr_points, //
+			long nr_points, //
 			double min_speed, //
 			double max_speed, //
 			double avg_speed, //
@@ -119,11 +119,11 @@ public class TBTrajectoriesStatisticsOutput implements Serializable {
 		this.id_c = id_c;
 	}
 
-	public int getNr_points() {
+	public long getNr_points() {
 		return nr_points;
 	}
 
-	public void setNr_points(int nr_points) {
+	public void setNr_points(long nr_points) {
 		this.nr_points = nr_points;
 	}
 

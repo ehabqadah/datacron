@@ -10,7 +10,7 @@ import de.fhg.iais.cassandra.ITableMetadata;
  * @author kthellmann
  *
  */
-public class TBMTrajectories implements ITableMetadata {
+public class TBMInputTrajectory implements ITableMetadata {
 
 	private static final long serialVersionUID = -4231611149506441800L;
 	
@@ -43,6 +43,7 @@ public class TBMTrajectories implements ITableMetadata {
 			.put("course", "double") //
 			.put("acceleration", "double") //
 			.put("turn", "double") //
+			.put("outlier", "boolean") //
 			.put("abs_prop", "map<text, double>") //
 			.put("rel_prop", "map<text, double>") //
 			.build(); //

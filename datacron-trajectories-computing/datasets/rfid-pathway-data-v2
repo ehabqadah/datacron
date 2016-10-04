@@ -1,0 +1,8 @@
+spark.app.trajectories.inputdata=rfid_pathway_data_v2
+spark.app.trajectories.output.nd=rfid_pathway_data_v2_nd
+spark.app.trajectories.output.nds=rfid_pathway_data_v2_nds
+spark.app.trajectories.statistics.output=rfid_pathway_data_v2_stats
+spark.app.trajectories.absoluteparams=
+spark.app.trajectories.relativeparams=
+spark.app.trajectories.physicaltime=false
+spark.app.trajectories.geocoordinates=false

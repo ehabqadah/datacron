@@ -1,6 +1,9 @@
-spark.app.input.data=medium_gennady_milan
+spark.app.input.data=milan
 spark.app.input.id=ID
 spark.app.input.date=DATE_
-spark.app.input.x=LAT
-spark.app.input.y=LONG
-spark.app.input.other=SPEED,DIRECTION,FIELD_1,FIELD_2,SMTH
+spark.app.input.date.pattern=yyyy-MM-dd HH:mm:ss
+spark.app.input.x=LON
+spark.app.input.y=LAT
+spark.app.input.other=SPEED,DIRECTION
+spark.app.input.physicaltime=true
+spark.app.input.geocoordinates=true

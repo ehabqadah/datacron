@@ -1,0 +1,8 @@
+spark.app.trajectories.inputdata=taxy_ny
+spark.app.trajectories.output.nd=taxy_ny_nd
+spark.app.trajectories.output.nds=taxy_ny_nds
+spark.app.trajectories.statistics.output=taxy_ny_stats
+spark.app.trajectories.absoluteparams=
+spark.app.trajectories.relativeparams=
+spark.app.trajectories.physicaltime=true
+spark.app.trajectories.geocoordinates=true

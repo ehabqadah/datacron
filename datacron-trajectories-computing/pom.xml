@@ -106,6 +106,12 @@
 			<artifactId>cassandra-utils</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>de.fhg.iais.kd.datacron.common</groupId>
+			<artifactId>datacron-common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 
@@ -127,7 +133,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>de.fhg.iais.kd.datacron.trajectories.main.Main</mainClass>
+									<mainClass>de.fhg.iais.kd.datacron.trajectories.computing.main.Main</mainClass>
 								</transformer>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">

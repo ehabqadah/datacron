@@ -1,0 +1,11 @@
+spark.app.trajectories=sankt_augustin_nds
+spark.app.trajectories.with.jumps.output=sankt_augustin_jumps
+spark.app.trajectories.with.duplicate.ids.output=sankt_augustin_with_duplicate_id
+spark.app.trajectories.without.jumps.output=sankt_augustin_without_jumps
+spark.app.trajectories.without.duplicate.ids.output=sankt_augustin_without_duplicate_id
+spark.app.trajectories.jumps.th.factor=5
+spark.app.trajectories.dupid.th.factor=20
+spark.app.trajectories.quantile.p=0.9
+spark.app.trajectories.statistics.input=sankt_augustin_stats
+spark.app.trajectories.physicaltime=true
+spark.app.trajectories.geocoordinates=true

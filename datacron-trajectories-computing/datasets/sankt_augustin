@@ -1,0 +1,8 @@
+spark.app.trajectories.inputdata=sankt_augustin
+spark.app.trajectories.output.nd=sankt_augustin_nd
+spark.app.trajectories.output.nds=sankt_augustin_nds
+spark.app.trajectories.statistics.output=sankt_augustin_stats
+spark.app.trajectories.absoluteparams=
+spark.app.trajectories.relativeparams=
+spark.app.trajectories.physicaltime=true
+spark.app.trajectories.geocoordinates=true

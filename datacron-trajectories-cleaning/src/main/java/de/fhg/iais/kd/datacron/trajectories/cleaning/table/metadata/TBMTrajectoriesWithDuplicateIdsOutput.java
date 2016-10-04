@@ -6,7 +6,7 @@ import com.google.inject.name.Named;
 /**
  * @author kthellmann
  */
-public class TBMTrajectoriesWithDuplicateIdsOutput extends TBMTrajectories {
+public class TBMTrajectoriesWithDuplicateIdsOutput extends TBMOutlierTrajectory {
 	
 	private static final long serialVersionUID = -4886696149322240100L;
 
