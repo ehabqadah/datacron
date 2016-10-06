@@ -8,7 +8,7 @@ import com.google.inject.name.Named;
  */
 public class TBMTrajectoriesWithoutJumpsOutput2 extends TBMOutputTrajectory {
 	
-	private static final long serialVersionUID = 869272068978779044L;
+	private static final long serialVersionUID = 7898787411855061115L;
 
 	@Inject
 	@Named("spark.app.trajectories.without.jumps.dist.output")

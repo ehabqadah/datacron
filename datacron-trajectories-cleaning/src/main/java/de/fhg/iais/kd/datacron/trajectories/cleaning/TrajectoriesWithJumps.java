@@ -87,9 +87,9 @@ public class TrajectoriesWithJumps implements Serializable {
 		this.detectBySpeed(inputRDD);
 
 		// Identify jumps by distance metric
-		 this.detectByDistance(inputRDD);
+		this.detectByDistance(inputRDD);
 
-		 this.trajectoriesInputProvider.close();
+		this.trajectoriesInputProvider.close();
 	}
 
 	/**
@@ -111,14 +111,13 @@ public class TrajectoriesWithJumps implements Serializable {
 		// Update table of trajectories without jumps (distance metric)
 		this.trajectoriesWithoutJumpsProvider2.updateTable(trajectoriesWithoutJumpsDistanceMetricRDD);
 	}
-	
+
 	/**
 	 * Identify jumps by speed metric
 	 * 
 	 * @param inputRDD
 	 */
 	private void detectBySpeed(JavaRDD<TBInputTrajectory> inputRDD) {
-
 		JavaRDD<TBOutlierTrajectory> trajectoriesWithJumpsSpeedMetricRDD = detectJumpsBySpeedMetric(inputRDD);
 
 		trajectoriesWithJumpsSpeedMetricRDD.cache();
@@ -140,7 +139,7 @@ public class TrajectoriesWithJumps implements Serializable {
 	private JavaRDD<TBOutlierTrajectory> detectJumpsByDistanceMetric(JavaRDD<TBInputTrajectory> inputRDD) {
 		final boolean isPhysicalTime = this.trajectoriesInputProvider.isTimeIsPhysical();
 		final boolean areGeoCoordinates = this.trajectoriesInputProvider.isCoordinatesAreGeo();
-		
+
 		JavaRDD<Iterable<TBOutlierTrajectory>> markedTrajectoriesDistanceMetricRDD = inputRDD.//
 				groupBy(point -> point.getId()).//
 				map(v1 -> {
@@ -180,11 +179,12 @@ public class TrajectoriesWithJumps implements Serializable {
 								false));
 					}
 
-					double distanceThreshold = Utils.computeQuantile(this.pDistance, distance) * this.jumpsThDistanceFactor;
+					double distanceThreshold = Utils.computeQuantile(this.pDistance, distance)
+							* this.jumpsThDistanceFactor;
 
 					// Compute distance btw current and next and compare with threshold
 					TBOutlierTrajectory markedcurrent = null;
-					
+
 					for (int i = 0; i <= outlierTrajectories.size() - 2; i++) {
 						TBOutlierTrajectory current = outlierTrajectories.get(i);
 						TBOutlierTrajectory next = outlierTrajectories.get(i + 1);
@@ -208,8 +208,7 @@ public class TrajectoriesWithJumps implements Serializable {
 								double x2_ = next.getX1();
 								double y2_ = next.getY1();
 
-								double distanceMarkedCurrentNext = Utils.calculateDistance(areGeoCoordinates, x1_, y1_,
-										x2_, y2_);
+								double distanceMarkedCurrentNext = Utils.calculateDistance(areGeoCoordinates, x1_, y1_, x2_, y2_);
 
 								if (distanceMarkedCurrentNext > distanceThreshold) {
 									next.setOutlier(true);
@@ -219,8 +218,7 @@ public class TrajectoriesWithJumps implements Serializable {
 								}
 							}
 						}
-					
-					
+
 					}
 
 					return outlierTrajectories;
@@ -286,7 +284,7 @@ public class TrajectoriesWithJumps implements Serializable {
 
 					// Compute speed btw current and next and compare with threshold
 					TBOutlierTrajectory markedcurrent = null;
-					
+
 					for (int i = 0; i <= outlierTrajectories.size() - 2; i++) {
 						TBOutlierTrajectory current = outlierTrajectories.get(i);
 						TBOutlierTrajectory next = outlierTrajectories.get(i + 1);
@@ -309,7 +307,7 @@ public class TrajectoriesWithJumps implements Serializable {
 								}
 							}
 						}
-					
+
 					}
 
 					return outlierTrajectories;
@@ -336,7 +334,7 @@ public class TrajectoriesWithJumps implements Serializable {
 			TBOutlierTrajectory t2, //
 			boolean isPhysicalTime, //
 			boolean coordinatesAreGeo) {
-		
+
 		final double distance = Utils.calculateDistance(coordinatesAreGeo, t1.getX1(), t1.getY1(), t2.getX1(), t2.getY1());
 		final long date1 = Utils.calculateTimeFromString(isPhysicalTime, t1.getDate1());
 		final long date2 = Utils.calculateTimeFromString(isPhysicalTime, t2.getDate1());
