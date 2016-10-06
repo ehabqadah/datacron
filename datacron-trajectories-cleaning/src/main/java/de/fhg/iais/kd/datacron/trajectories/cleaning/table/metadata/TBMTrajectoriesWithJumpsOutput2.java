@@ -6,15 +6,15 @@ import com.google.inject.name.Named;
 /**
  * @author kthellmann
  */
-public class TBMTrajectoriesWithJumpsOutput extends TBMOutlierTrajectory {
+public class TBMTrajectoriesWithJumpsOutput2 extends TBMOutlierTrajectory {
 	
-	private static final long serialVersionUID = -1179949909933492278L;
+	private static final long serialVersionUID = 5464159792604988807L;
 
 	@Inject
-	@Named("spark.app.trajectories.with.jumps.speed.output")
+	@Named("spark.app.trajectories.with.jumps.dist.output")
 	private String tableName;
 	
-	private static final String DESCRIPTION = "Trajectories with jumps output.(Speed based metric)";
+	private static final String DESCRIPTION = "Trajectories with jumps output. (Distance based metric)";
 
 	public String getTableName() {
 		return tableName;

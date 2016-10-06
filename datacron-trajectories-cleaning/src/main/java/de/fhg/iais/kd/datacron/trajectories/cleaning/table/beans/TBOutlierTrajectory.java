@@ -30,7 +30,7 @@ public class TBOutlierTrajectory implements Serializable {
 	private Map<String, Double> additional;
 
 	private boolean outlier;
-
+	
 	public TBOutlierTrajectory() {
 	}
 

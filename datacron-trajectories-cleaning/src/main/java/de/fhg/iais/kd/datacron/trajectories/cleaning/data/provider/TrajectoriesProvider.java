@@ -22,6 +22,7 @@ public class TrajectoriesProvider extends AbstractDataProvider<TBInputTrajectory
 	@Named("spark.app.trajectories.geocoordinates")
 	private boolean coordinatesAreGeo;
 
+
 	@Inject
 	public TrajectoriesProvider( //
 			TBMInputTrajectory tableMetadata, //

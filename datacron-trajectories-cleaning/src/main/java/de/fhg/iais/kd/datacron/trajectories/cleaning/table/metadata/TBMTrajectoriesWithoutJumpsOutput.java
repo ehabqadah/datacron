@@ -11,10 +11,10 @@ public class TBMTrajectoriesWithoutJumpsOutput extends TBMOutputTrajectory {
 	private static final long serialVersionUID = 869272068978779044L;
 
 	@Inject
-	@Named("spark.app.trajectories.without.jumps.output")
+	@Named("spark.app.trajectories.without.jumps.speed.output")
 	private String tableName;
 	
-	private static final String DESCRIPTION = "Trajectories without jumps output.";
+	private static final String DESCRIPTION = "Trajectories without jumps output.(Speed based metric)";
 
 	public String getTableName() {
 		return tableName;

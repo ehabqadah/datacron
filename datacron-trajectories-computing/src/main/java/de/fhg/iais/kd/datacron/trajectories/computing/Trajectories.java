@@ -1,10 +1,7 @@
 package de.fhg.iais.kd.datacron.trajectories.computing;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -85,8 +82,7 @@ public class Trajectories implements Serializable {
 		});
 
 		// 3. Compute trajectories
-		// 3.1. Group records from input2RDD by id pair1RDD := (id,
-		// nonduplicates records) NDR
+		// 3.1. Group records from input2RDD by id pair1RDD := (id,nonduplicates records) NDR
 		JavaPairRDD<String, Iterable<TBTrajectoriesParametrizedInput>> pair1RDD = input2RDD
 				.groupBy(input -> input.getId());
 
@@ -131,10 +127,8 @@ public class Trajectories implements Serializable {
 			return new Tuple2<>(tuple._1(), stationaryPointsList);
 		});
 
-		// Compute join1RDD := pair1RDD.join(pair2RDD) by id -> (list non
-		// duplicates, list stationary points)
-		JavaPairRDD<String, Tuple2<Iterable<TBTrajectoriesParametrizedInput>, Iterable<TBTrajectoriesOutput>>> join1RDD = pair1RDD
-				.join(pair3RDD);
+		// Compute join1RDD := pair1RDD.join(pair2RDD) by id -> (list non duplicates, list stationary points)
+		JavaPairRDD<String, Tuple2<Iterable<TBTrajectoriesParametrizedInput>, Iterable<TBTrajectoriesOutput>>> join1RDD = pair1RDD.join(pair3RDD);
 
 		// Create pair4RDD := (id, nonduplicates nonstationary records) //NDS
 		final boolean timeIsPhysical = this.parametrizeInputProvider.isTimeIsPhysical();
@@ -185,29 +179,24 @@ public class Trajectories implements Serializable {
 	}
 
 	/**
-	 * @param pair1RDD
+	 * @param inputRDD
 	 * @return
 	 */
 	private JavaRDD<TBTrajectoriesOutput> computeTrajectories(
-			JavaPairRDD<String, Iterable<TBTrajectoriesParametrizedInput>> pair1RDD) {
+			JavaPairRDD<String, Iterable<TBTrajectoriesParametrizedInput>> inputRDD) {
+		
 		final boolean isPhysicalTime = this.parametrizeInputProvider.isTimeIsPhysical();
 		final boolean areGeoCoordinates = this.parametrizeInputProvider.isCoordinatesAreGeo();
 
-		return pair1RDD.map(tuple -> {
+		return inputRDD.map(tuple -> {
 			final Iterable<TBTrajectoriesParametrizedInput> records = tuple._2();
 
 			// Compute lists of input records sorted by date
-			ImmutableList<TBTrajectoriesParametrizedInput> orderedRecordsByDate = Ordering.from(
-					(TBTrajectoriesParametrizedInput firstRecord, TBTrajectoriesParametrizedInput secondRecord) -> Long
-							.compare(firstRecord.getD(), secondRecord.getD()))
-					.immutableSortedCopy(records);
+			ImmutableList<TBTrajectoriesParametrizedInput> orderedRecordsByDate = Ordering.from((TBTrajectoriesParametrizedInput firstRecord, TBTrajectoriesParametrizedInput secondRecord) -> Long.compare(firstRecord.getD(), secondRecord.getD())).immutableSortedCopy(records);
 
-			// Compute list of counted input records tuples: (id, [<1,(current,
-			// next)>, <2, (current, next)>, ...])
-			final Builder<Tuple2<Integer, Tuple2<TBTrajectoriesParametrizedInput, TBTrajectoriesParametrizedInput>>> pairRecordsBuilder = ImmutableList
-					.builder();
-			final PeekingIterator<TBTrajectoriesParametrizedInput> peekIterator1 = Iterators
-					.peekingIterator(orderedRecordsByDate.iterator());
+			// Compute list of counted input records tuples: (id, [<1,(current, next)>, <2, (current, next)>, ...])
+			final Builder<Tuple2<Integer, Tuple2<TBTrajectoriesParametrizedInput, TBTrajectoriesParametrizedInput>>> pairRecordsBuilder = ImmutableList.builder();
+			final PeekingIterator<TBTrajectoriesParametrizedInput> peekIterator1 = Iterators.peekingIterator(orderedRecordsByDate.iterator());
 
 			int recordsCounter = 1;
 
@@ -220,15 +209,14 @@ public class Trajectories implements Serializable {
 				}
 			}
 
-			ImmutableList<Tuple2<Integer, Tuple2<TBTrajectoriesParametrizedInput, TBTrajectoriesParametrizedInput>>> pairedRecordsByDate = pairRecordsBuilder
-					.build();
+			ImmutableList<Tuple2<Integer, Tuple2<TBTrajectoriesParametrizedInput, TBTrajectoriesParametrizedInput>>> pairedRecordsByDate = pairRecordsBuilder.build();
 
-			// Compute course, speed, distance and time-/coordinate differences
-			// btw. current and next record
+			// Compute course, speed, distance and time-/coordinate differences btw. current and next record
 			final Builder<TBTrajectoriesOutput> trajectoriesBuilder1 = ImmutableList.builder();
 
 			for (Tuple2<Integer, Tuple2<TBTrajectoriesParametrizedInput, TBTrajectoriesParametrizedInput>> recordPair : pairedRecordsByDate) {
 				final int trajectoryCounter = recordPair._1();
+				
 				final TBTrajectoriesParametrizedInput record1 = recordPair._2()._1();
 				final String id = record1.getId();
 				final long date1 = record1.getD();
@@ -239,54 +227,40 @@ public class Trajectories implements Serializable {
 				final long date2 = record2.getD();
 				final double x2 = record2.getX();
 				final double y2 = record2.getY();
-
-				double diffTime = 0.0;
-
-				if (isPhysicalTime) {
-					diffTime = ((double) (date2 - date1)) / (1000 * 60 * 60 * 24);
-				} else {
-					diffTime = Math.toIntExact(date2 - date1);
-				}
+								
+				final double diffTime = Utils.calculateDiffTime(isPhysicalTime, date1, date2);			
 
 				final double diffX = x2 - x1;
 				final double diffY = y2 - y1;
 
-				double distance = calculateDistance(areGeoCoordinates, x1, y1, x2, y2);
-
-				final Map<String, Double> absoluteParamsDifferencesMap = subtractMap(record2.getAbs_prop(),
-						record1.getAbs_prop());
-
-				double speed = 0.0;
+				final double distance = Utils.calculateDistance(areGeoCoordinates, x1, y1, x2, y2);	
+				
+				final double speed = Utils.calculateSpeed(isPhysicalTime, distance, diffTime);
+				
+				final double course = Utils.calculateCourse(isPhysicalTime, diffX, diffY);
+				
+				final Map<String, Double> absoluteParamsDifferencesMap = Utils.subtractMap(record2.getAbs_prop(), record1.getAbs_prop());
 
 				final Map<String, Double> relativeParamsValuesMap;
 
 				if (diffTime > 0) {
-					final Map<String, Double> relativeParamsDifferencesMap = subtractMap(record2.getRel_prop(),
-							record1.getRel_prop());
+					final Map<String, Double> relativeParamsDifferencesMap = Utils.subtractMap(record2.getRel_prop(), record1.getRel_prop());
 
 					if (isPhysicalTime) {
-						speed = distance / (diffTime * 24);
-						relativeParamsValuesMap = divideMapBy(relativeParamsDifferencesMap, diffTime * 24 * 3600);
+						relativeParamsValuesMap = Utils.divideMapBy(relativeParamsDifferencesMap, diffTime * 24 * 3600);
 					} else {
-						speed = distance / diffTime;
-						relativeParamsValuesMap = divideMapBy(relativeParamsDifferencesMap, diffTime);
+						relativeParamsValuesMap = Utils.divideMapBy(relativeParamsDifferencesMap, diffTime);
 					}
 				} else {
 					relativeParamsValuesMap = null;
 				}
-
-				double course = 180 * Math.atan2(diffX, diffY) / Math.PI;
-
-				if (course < 0) {
-					course += 360;
-				}
-
+				
 				TBTrajectoriesOutput trajectory = new TBTrajectoriesOutput();
 				trajectory.setId(id);
 				trajectory.setId_c(trajectoryCounter);
 
-				String date1Str = calculateTimeAsString(isPhysicalTime, date1);
-				String date2Str = calculateTimeAsString(isPhysicalTime, date2);
+				String date1Str = Utils.calculateTimeAsString(isPhysicalTime, date1);
+				String date2Str = Utils.calculateTimeAsString(isPhysicalTime, date2);
 
 				trajectory.setDifftime(diffTime);
 				trajectory.setDate1(date1Str);
@@ -311,8 +285,7 @@ public class Trajectories implements Serializable {
 			final ImmutableList<TBTrajectoriesOutput> trajectoriesList = trajectoriesBuilder1.build();
 
 			// Compute acceleration and turn btw. current and next record pair
-			final PeekingIterator<TBTrajectoriesOutput> peekIterator2 = Iterators
-					.peekingIterator(trajectoriesList.iterator());
+			final PeekingIterator<TBTrajectoriesOutput> peekIterator2 = Iterators.peekingIterator(trajectoriesList.iterator());
 			final Builder<TBTrajectoriesOutput> trajectoriesBuilder2 = ImmutableList.builder();
 
 			while (peekIterator2.hasNext()) {
@@ -327,18 +300,12 @@ public class Trajectories implements Serializable {
 
 					if (diffTime1 > 0) {
 						final double speed2 = recordsPair2.getSpeed();
-
-						if (isPhysicalTime) {
-							acceleration = (speed2 - speed1) / (diffTime1 * 24 * 3600);
-						} else {
-							acceleration = (speed2 - speed1) / diffTime1;
-						}
-
+						acceleration = Utils.calculateAcceleration(isPhysicalTime, diffTime1, speed1, speed2);
 						recordsPair1.setAcceleration(acceleration);
 					}
 
 					final double course2 = recordsPair2.getCourse();
-					final double turn = course1 - course2;
+					final double turn = Utils.calculateTurn(course1, course2);
 
 					recordsPair1.setTurn(turn);
 				}
@@ -351,68 +318,9 @@ public class Trajectories implements Serializable {
 		}).flatMap(result -> result);
 	}
 
-	public static String calculateTimeAsString(final boolean isPhysicalTime, final long date1) {
-		String date1Str;
-		if (isPhysicalTime) {
-			date1Str = String.valueOf(new DateTime(date1));
-		} else {
-			date1Str = String.valueOf(date1);
-		}
-		return date1Str;
-	}
+	
+	
 
-	public static double calculateDistance(final boolean areGeoCoordinates, final double x1, final double y1,
-			final double x2, final double y2) {
-		double distance;
-
-		if (areGeoCoordinates) {
-			distance = Utils.greatCircle(y1, x1, y2, x2);
-		} else {
-			distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-		}
-		return distance;
-	}
-
-	/**
-	 * @param map1
-	 * @param map2
-	 * @return
-	 */
-	private Map<String, Double> subtractMap(Map<String, Double> map1, Map<String, Double> map2) {
-		if (map1 == null || map2 == null) {
-			return null;
-		}
-
-		Map<String, Double> differenceValuesMap = new HashMap<String, Double>();
-
-		for (Entry<String, Double> entry : map1.entrySet()) {
-			String key = entry.getKey();
-			double value = entry.getValue();
-			differenceValuesMap.put(key, value - map2.get(key));
-		}
-
-		return differenceValuesMap;
-	}
-
-	/**
-	 * @param map
-	 * @param divisor
-	 * @return
-	 */
-	private Map<String, Double> divideMapBy(Map<String, Double> map, double divisor) {
-		if (map == null || divisor == 0) {
-			return null;
-		}
-
-		Map<String, Double> dividedValuesMap = new HashMap<String, Double>();
-
-		for (Entry<String, Double> entry : map.entrySet()) {
-			String key = entry.getKey();
-			double value = entry.getValue();
-			dividedValuesMap.put(key, value / divisor);
-		}
-
-		return dividedValuesMap;
-	}
+	
 
 }
