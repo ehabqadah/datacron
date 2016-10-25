@@ -30,8 +30,8 @@ public class SparkApp implements ISparkApp{
 	public void run() {
 		
 		// Clean corrupt trajectories
-		//this.trajectoriesWithDuplicateIds.clean();
-		this.trajectoriesWithJumps.clean();		
+		this.trajectoriesWithDuplicateIds.clean();
+		//this.trajectoriesWithJumps.clean();		
 	}
 
 }

@@ -1,0 +1,8 @@
+spark.app.trajectories.inputdata=cab
+spark.app.trajectories.output.nd=cab_nd
+spark.app.trajectories.output.nds=cab_nds
+spark.app.trajectories.statistics.output=cab_stats
+spark.app.trajectories.absoluteparams=
+spark.app.trajectories.relativeparams=
+spark.app.trajectories.physicaltime=true
+spark.app.trajectories.geocoordinates=true

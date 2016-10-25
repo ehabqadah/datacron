@@ -5,10 +5,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import java.io.BufferedReader;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +17,8 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.storage.StorageLevel;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -168,7 +168,8 @@ public class Importer implements Serializable {
 							if (outliers == null || !outliers.contains(additionalEntryString)) {
 								additional.put(entry.getKey(), additionalEntryString);
 							} else {
-								getLogger().warn("Detected attribute outlier in trajectory " + id + "[" + id_c + "]: name=" + entry.getKey() + " outlier=" + additionalEntryString);
+								getLogger().warn("Detected attribute outlier in trajectory " + id + "[" + id_c
+										+ "]: name=" + entry.getKey() + " outlier=" + additionalEntryString);
 							}
 						}
 
@@ -178,11 +179,19 @@ public class Importer implements Serializable {
 						!isNullOrEmpty(dateString) && //
 						!outlierPoints.contains(xString) && //
 						!outlierPoints.contains(yString) && //
-						!outlierDates.contains(dateString)) {							
+						!outlierDates.contains(dateString)) {
 							String formattedDateString = null;
 							if (mapping.isPhysicaltime()) {
-								Date date = new SimpleDateFormat(mapping.getDatepattern()).parse(dateString);
-								formattedDateString = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(date);
+								String datepattern = mapping.getDatepattern();
+								DateTime date;
+								if (datepattern.equals("sec")) {
+									date = new DateTime(Long.parseLong(dateString) * 1000);
+								} else if (datepattern.equals("millis")) {
+									date = new DateTime(Long.parseLong(dateString));
+								} else {
+									date = DateTimeFormat.forPattern(datepattern).parseDateTime(dateString);
+								}
+								formattedDateString = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").print(date);
 							} else {
 								formattedDateString = dateString;
 							}

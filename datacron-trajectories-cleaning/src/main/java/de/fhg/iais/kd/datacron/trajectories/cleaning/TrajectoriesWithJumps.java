@@ -28,8 +28,7 @@ import de.fhg.iais.kd.datacron.trajectories.cleaning.table.beans.TBOutputTraject
 /**
  * Detect and correct trajectories with jumps:
  * 
- * I. Characteristics: Large distance in a short time interval btw. 2
- * consecutive points
+ * I. Characteristics: Large distance in a short time interval btw. 2 consecutive points
  * 
  * II. Detection criteria: Distance btw. current and next larger than threshold.
  * 
@@ -179,8 +178,7 @@ public class TrajectoriesWithJumps implements Serializable {
 								false));
 					}
 
-					double distanceThreshold = Utils.computeQuantile(this.pDistance, distance)
-							* this.jumpsThDistanceFactor;
+					double distanceThreshold = Utils.computeQuantile(this.pDistance, distance) * this.jumpsThDistanceFactor;
 
 					// Compute distance btw current and next and compare with threshold
 					TBOutlierTrajectory markedcurrent = null;

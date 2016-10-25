@@ -47,9 +47,6 @@ public class Trajectories implements Serializable {
 		// 1. Create input1RDD from inputData
 		JavaRDD<TBTrajectoriesParametrizedInput> input1RDD = parametrizeInputProvider.createInputBean();
 
-		// Cache input
-		input1RDD.persist(StorageLevel.MEMORY_AND_DISK());
-
 		// 2. Eliminate duplicates
 		// 2.1 Group by id and date
 		JavaPairRDD<Tuple2<String, Long>, Iterable<TBTrajectoriesParametrizedInput>> tuple1RDD = input1RDD
@@ -85,6 +82,10 @@ public class Trajectories implements Serializable {
 		// 3.1. Group records from input2RDD by id pair1RDD := (id,nonduplicates records) NDR
 		JavaPairRDD<String, Iterable<TBTrajectoriesParametrizedInput>> pair1RDD = input2RDD
 				.groupBy(input -> input.getId());
+
+		// Cache input
+		pair1RDD.persist(StorageLevel.MEMORY_AND_DISK());
+
 
 		// 3.2 Compute trajectory attributes: time-/coordinate differences,
 		// distance, course, speed, trace and acceleration
@@ -166,6 +167,7 @@ public class Trajectories implements Serializable {
 
 		// Recompute trajectories
 		JavaRDD<TBTrajectoriesOutput> result2RDD = this.computeTrajectories(pair4RDD);
+		result2RDD.persist(StorageLevel.MEMORY_AND_DISK());
 
 		// Compute trajectories statistic
 		statistics.generate(result2RDD);

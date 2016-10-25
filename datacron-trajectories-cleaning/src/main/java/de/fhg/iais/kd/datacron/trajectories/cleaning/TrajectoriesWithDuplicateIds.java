@@ -2,7 +2,6 @@ package de.fhg.iais.kd.datacron.trajectories.cleaning;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,7 +12,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -83,41 +82,55 @@ public class TrajectoriesWithDuplicateIds implements Serializable {
 		// Load computed statistics about trajectories
 		final JavaRDD<TBStatistics> statisticsRDD = statisticsInputProvider.readInputTableRows();
 
-		// Create speedMedianRDD: (TrajectoryId, m_ti)
-		// Speed median m_ti for each trajectory i€ {1..n}
+		// Create speedMedianRDD: (TrajectoryId, speed_m_ti)
+		// Speed median speed_m_ti for each trajectory i€ {1..n}
 		final JavaPairRDD<String, Double> speedMedianRDD = statisticsRDD.mapToPair(arg0 -> {
 			return new Tuple2<>(arg0.getId(), arg0.getMedian_speed());
 		});
 
-		// Compute median m of all m_ti
-		final double speedMedian = this.computeMedian(speedMedianRDD.mapToPair(pair -> new Tuple2<>("ALL", pair._2()))).first()._2();
+		// Compute median m of all speed_m_ti
+		final double speedMedian = Utils.computeMedian(speedMedianRDD.mapToPair(pair -> new Tuple2<>("ALL", pair._2())))
+				.first()._2();
 
 		// Set threshold th = c * m (c constant)
 		final double speedThreshold = dupIdThresholdFactor * speedMedian;
 
-		// Compare all m_ti with m: if (m_ti > th) then possible outlier
-		final JavaPairRDD<String, Double> speedOutlierRDD = speedMedianRDD.filter(tuple -> tuple._2() > speedThreshold);
-		final Set<String> speedOutlier = new HashSet<>(speedOutlierRDD.keys().collect());
+		// Create speedAverageRDD:(TrajectoryId, speed_avg_ti)
+		// Speed average speed_avg_ti for each trajectory i€ {1..n}
+		final JavaPairRDD<String, Double> speedAverageRDD = statisticsRDD.mapToPair(arg0 -> {
+			return new Tuple2<>(arg0.getId(), arg0.getAvg_speed());
+		});
 
-		// Filter trajectories with duplicate ids
-		final JavaRDD<TBOutlierTrajectory> trajectoriesWithDuplicateIDsRDD = inputRDD.filter(arg0 -> {
-			if (speedOutlier.contains(arg0.getId())) {				
+		// Compare all speed_avg_ti with m: if (speed_avg_ti > th) then possible
+		// outlier
+		final JavaPairRDD<String, Double> speedOutlierRDD = speedAverageRDD.filter(tuple -> {
+			if (tuple._2() > speedThreshold) {
 				return true;
 			}
 
 			return false;
-			
+		});
+
+		final Set<String> speedOutlier = new HashSet<>(speedOutlierRDD.keys().collect());
+
+		// Filter trajectories with duplicate ids
+		final JavaRDD<TBOutlierTrajectory> trajectoriesWithDuplicateIDsRDD = inputRDD.filter(arg0 -> {
+			if (speedOutlier.contains(arg0.getId())) {
+				return true;
+			}
+
+			return false;
 		}).map(arg0 -> {
 			boolean outlier = false;
-			
+
 			if (arg0.getSpeed() > speedThreshold) {
 				outlier = true;
-			}	
-			
+			}
+
 			Map<String, Double> additional = new HashMap<String, Double>();
 			additional.putAll(arg0.getAbs_prop());
 			additional.putAll(arg0.getRel_prop());
-			
+
 			return new TBOutlierTrajectory(//
 					arg0.getId(), //
 					arg0.getId_c(), //
@@ -137,16 +150,18 @@ public class TrajectoriesWithDuplicateIds implements Serializable {
 		// Update table of trajectories with duplicate ids
 		trajectoriesWithDuplicateIdsProvider.updateTable(trajectoriesWithDuplicateIDsRDD);
 
-//		System.out.println("TRAJECTORIES WITH DUPLICATE IDs: " + trajectoriesWithDuplicateIDsRDD.collect());
-
 		// Fix corrupt trajectory
 		this.correct(trajectoriesWithDuplicateIDsRDD);
+		trajectoriesInputProvider.close();
 	}
 
 	/**
 	 * Correct trajectories with duplicate ids
 	 */
 	private void correct(JavaRDD<TBOutlierTrajectory> trajectoriesWithDuplicateIDsRDD) {
+		// I. Determine distance threshold of tx:
+		final boolean isPhysicalTime = trajectoriesInputProvider.isTimeIsPhysical();
+		final boolean areGeoCoordinates = trajectoriesInputProvider.isCoordinatesAreGeo();
 
 		JavaRDD<TBOutputTrajectory> splitTrajectoriesRDD = trajectoriesWithDuplicateIDsRDD
 				.groupBy(point -> point.getId()) //
@@ -154,98 +169,143 @@ public class TrajectoriesWithDuplicateIds implements Serializable {
 					String idTx = v1._1();
 					Iterable<TBOutlierTrajectory> trajectoryTxPoints = v1._2();
 
-					// I. Determine distance threshold of tx:
-					final boolean isPhysicalTime = trajectoriesInputProvider.isTimeIsPhysical();
-					final boolean areGeoCoordinates = trajectoriesInputProvider.isCoordinatesAreGeo();
-
 					// Sort trajectory points chronological
 					ImmutableList<TBOutlierTrajectory> chronologicalPoints = sortChronologically(trajectoryTxPoints,
 							isPhysicalTime);
 
-					List<Double> minimumDistances = new ArrayList<>();
-					double maxErrDist = Double.MIN_VALUE;
+					double maxSpeed = 0;
+					int headTrajectory1 = -1;
+					int headTrajectory2 = -1;
 
-					// Compute distance from point x to all other points:
-					// -> Min distance (= min spanning tree) for median
-					// -> Max distance for average
 					for (int i = 0; i < chronologicalPoints.size() - 1; i++) {
-						double minimumDistance = Double.MAX_VALUE;
-						TBOutlierTrajectory point1 = chronologicalPoints.get(i);
-						double x1 = point1.getX1();
-						double y1 = point1.getY1();
-
-						for (int j = i + 1; j < chronologicalPoints.size(); j++) {
-							TBOutlierTrajectory point2 = chronologicalPoints.get(j);
-							double x2 = point2.getX1();
-							double y2 = point2.getY1();
-
-							double distance = Utils.calculateDistance(areGeoCoordinates, x1, y1, x2, y2);
-
-							if (distance < minimumDistance) {
-								minimumDistance = distance;
-							}
-
-							if (distance > maxErrDist) {
-								maxErrDist = distance;
-							}
+						TBOutlierTrajectory currentPoint = chronologicalPoints.get(i);
+						double speed = currentPoint.getSpeed();
+						if (speed > maxSpeed) {
+							maxSpeed = speed;
+							headTrajectory1 = i;
+							headTrajectory2 = i + 1;
 						}
-
-						minimumDistances.add(minimumDistance);
 					}
 
-					// Compute median of all min distances of tx.
-					// Median might help in determining the min erroneous
-					// connection btw. 2 points.
-					double minErrDist = Utils.computeMedian(minimumDistances);
-
-					// Distance threshold for tx.
-					double thresholdTx = (maxErrDist + minErrDist) / 2;
+					System.out.println("Speed: " + maxSpeed);
+					System.out.println("Head 1: #" + headTrajectory1 + " = "
+							+ chronologicalPoints.get(headTrajectory1).toString());
+					System.out.println("Head 2: #" + headTrajectory2 + " = "
+							+ chronologicalPoints.get(headTrajectory2).toString());
 
 					// II. Perform splitting of tx into tx1 and tx2
-					Set<TBOutputTrajectory> splitTrajectories = new HashSet<TBOutputTrajectory>();
-					String idTx2 = String.valueOf(Math.random() * Integer.valueOf(idTx));
+					List<TBOutputTrajectory> t1 = new ArrayList<TBOutputTrajectory>();
+					List<TBOutputTrajectory> t2 = new ArrayList<TBOutputTrajectory>();
 
-					TBOutlierTrajectory current = chronologicalPoints.iterator().next();
+					String idTx2 = idTx + "_" + ((int) (Math.random() * Integer.MAX_VALUE));
 
-					for (int i = 1; i < chronologicalPoints.size(); i++) {
-						double x1 = current.getX1();
-						double y1 = current.getY1();
+					TBOutlierTrajectory current = chronologicalPoints.get(headTrajectory1);
+					t1.add(toOutputTrajectory(idTx, current));
+					TBOutlierTrajectory previous = chronologicalPoints.get(headTrajectory2);
+					t2.add(toOutputTrajectory(idTx2, previous));
+					
+					boolean currentIsInT1 = true;
 
+					for (int i = headTrajectory1 - 1; i >= 0; i--) {
 						TBOutlierTrajectory next = chronologicalPoints.get(i);
-						double x2 = next.getX1();
-						double y2 = next.getY1();
 
-						double distanceCurrentNext = Utils.calculateDistance(areGeoCoordinates, x1, y1, x2, y2);
+						double speedNextCurrent = next.getSpeed();
+						double speedNextPrevious = calculateTBOutlierSpeed(isPhysicalTime, areGeoCoordinates, next,
+								previous);
 
-						if (distanceCurrentNext < thresholdTx) {
-							TBOutputTrajectory trajectoryTx1 = new TBOutputTrajectory(//
-									idTx, next.getId_c(), next.getDate1(), String.valueOf(next.getX1()),
-									String.valueOf(next.getX2()), next.getAdditional());
-
-							splitTrajectories.add(trajectoryTx1);
-
+						if (speedNextCurrent <= speedNextPrevious) {
+							// next belongs to trajectory of current
+							if (currentIsInT1) {
+								t1.add(toOutputTrajectory(idTx, next));
+							} else {
+								t2.add(toOutputTrajectory(idTx2, next));
+							}
 						} else {
-							TBOutputTrajectory trajectoryTx2 = new TBOutputTrajectory(//
-									idTx2, next.getId_c(), next.getDate1(), String.valueOf(next.getX1()),
-									String.valueOf(next.getX2()), next.getAdditional());
+							// next belongs to trajectory of previous
+							if (currentIsInT1) {
+								t2.add(toOutputTrajectory(idTx2, next));
+								currentIsInT1=false;
+							} else {
+								t1.add(toOutputTrajectory(idTx, next));
+								currentIsInT1=true;
+							}
 
-							splitTrajectories.add(trajectoryTx2);
+							previous = current;
 						}
+
+						current = next;
 					}
 
-					return splitTrajectories;
+					current = chronologicalPoints.get(headTrajectory2);
+					previous = chronologicalPoints.get(headTrajectory1);
+					currentIsInT1 = false;
+
+					for (int i = headTrajectory2; i < chronologicalPoints.size() - 1; i++) {
+						TBOutlierTrajectory next = chronologicalPoints.get(i);
+						double speedCurrentNext = current.getSpeed();
+
+						double speedPreviousNext = calculateTBOutlierSpeed(isPhysicalTime, areGeoCoordinates, previous,
+								next);
+
+						if (speedCurrentNext <= speedPreviousNext) {
+							// next belongs to trajectory of current
+							if (currentIsInT1) {
+								t1.add(toOutputTrajectory(idTx, next));
+							} else {
+								t2.add(toOutputTrajectory(idTx2, next));
+							}
+						} else {
+							// next belongs to trajectory of previous
+							if (currentIsInT1) {
+								t2.add(toOutputTrajectory(idTx2, next));
+								currentIsInT1 = false;
+							} else {
+								t1.add(toOutputTrajectory(idTx, next));
+								currentIsInT1 = true;
+							}
+
+							previous = current;
+						}
+
+						current = next;
+					}
+
+					return Iterables.concat(t1, t2);
 				});
 
 		splitTrajectoriesRDD.cache();
-
-//		System.out.println("SPLIT TRAJECTORIES: " + splitTrajectoriesRDD.collect());
 
 		trajectoriesWithoutDuplicateIdsProvider.updateTable(splitTrajectoriesRDD);
 
 	}
 
-	private static ImmutableList<TBOutlierTrajectory> sortChronologically(Iterable<TBOutlierTrajectory> trajectoryTxPoints,
-			final boolean isPhysicalTime) {
+	private double calculateTBOutlierSpeed(final boolean isPhysicalTime, final boolean areGeoCoordinates,
+			TBOutlierTrajectory trajectory1, TBOutlierTrajectory trajectory2) {
+		double x1 = trajectory1.getX1();
+		double y1 = trajectory1.getY1();
+		double x2 = trajectory2.getX1();
+		double y2 = trajectory2.getY1();
+		double distance = Utils.calculateDistance(areGeoCoordinates, x1, y1, x2, y2);
+
+		long date1 = Utils.calculateTimeFromString(isPhysicalTime, trajectory1.getDate1());
+		long date2 = Utils.calculateTimeFromString(isPhysicalTime, trajectory2.getDate1());
+		double diffTime = Utils.calculateDiffTime(isPhysicalTime, date1, date2);
+
+		return Utils.calculateSpeed(isPhysicalTime, distance, diffTime);
+	}
+
+	private TBOutputTrajectory toOutputTrajectory(String id, TBOutlierTrajectory tbOutlierTrajectory) {
+		return new TBOutputTrajectory(//
+				id, //
+				tbOutlierTrajectory.getId_c(), //
+				tbOutlierTrajectory.getDate1(), //
+				String.valueOf(tbOutlierTrajectory.getX1()), //
+				String.valueOf(tbOutlierTrajectory.getY1()), //
+				tbOutlierTrajectory.getAdditional());
+	}
+
+	private static ImmutableList<TBOutlierTrajectory> sortChronologically(
+			Iterable<TBOutlierTrajectory> trajectoryTxPoints, final boolean isPhysicalTime) {
 		return Ordering.from((TBOutlierTrajectory point1, TBOutlierTrajectory point2) -> {
 			long time1 = Utils.calculateTimeFromString(isPhysicalTime, point1.getDate1());
 			long time2 = Utils.calculateTimeFromString(isPhysicalTime, point2.getDate1());
@@ -253,31 +313,6 @@ public class TrajectoriesWithDuplicateIds implements Serializable {
 			return Long.compare(time1, time2);
 
 		}).immutableSortedCopy(trajectoryTxPoints);
-	}
-
-	/**
-	 * Compute speed median
-	 * 
-	 * @param pairRDD:
-	 *            (TrajectoryID, speed)
-	 * @return pairRDD: (TrajectoryID, speed median)
-	 */
-	private JavaPairRDD<String, Double> computeMedian(JavaPairRDD<String, Double> pairRDD) {
-		return pairRDD.groupByKey().mapToPair(tuple -> {
-			final String id = tuple._1();
-			final ArrayList<Double> difftime = Lists.newArrayList(tuple._2());
-			Collections.sort(difftime);
-			double median = 0.0;
-
-			if (difftime.size() % 2 == 0) {
-				median = ((double) difftime.get(difftime.size() / 2) + (double) difftime.get(difftime.size() / 2 - 1))
-						/ 2;
-			} else {
-				median = (double) difftime.get(difftime.size() / 2);
-			}
-
-			return new Tuple2<>(id, median);
-		});
 	}
 
 }

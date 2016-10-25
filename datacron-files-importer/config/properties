@@ -35,4 +35,4 @@ spark.cassandra.output.consistency.level=ALL
 # LOGGING
 #------------------------------------------------------------------------------
 #spark.app.trajectories.statistics=/datacron/logs
-spark.app.trajectories.statistics=/home/mint/Documents/datacron/v-analytics/datacron-importer/statistics
+spark.app.trajectories.statistics=/home/mint/Documents/statistics

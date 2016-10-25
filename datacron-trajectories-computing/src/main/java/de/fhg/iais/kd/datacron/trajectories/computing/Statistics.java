@@ -152,7 +152,7 @@ public class Statistics implements Serializable {
 			String id = arg0._1();
 			Double medianspeed = arg0._2()._1();
 			TBTrajectoriesStatisticsOutput statistics = arg0._2()._2();
-			statistics.setAvg_speed(medianspeed);
+			statistics.setMedian_speed(medianspeed);
 
 			return new Tuple2<>(id, statistics);
 		});

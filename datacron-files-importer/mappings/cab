@@ -1,0 +1,10 @@
+spark.app.input.data=cab
+spark.app.input.id=id
+spark.app.input.date=time
+spark.app.input.date.pattern=sec
+spark.app.input.x=longitude
+spark.app.input.y=latitude
+spark.app.input.other=
+spark.app.input.physicaltime=true
+spark.app.input.geocoordinates=true
+
